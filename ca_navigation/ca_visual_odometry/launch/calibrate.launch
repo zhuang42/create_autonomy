@@ -1,0 +1,11 @@
+<launch>
+    <arg name="chessboard_x" default="8"/>
+    <arg name="chessboard_y" default="6"/>
+    <arg name="square_size_mm" default="24"/>
+    <arg name="camera_topic" default="/raspicam/image_raw"/>
+
+    <param name="square_size_m" value="$(eval arg('square_size_mm')/1000.)"/>
+    
+    <node pkg="camera_calibration" type="cameracalibrator.py" name="raspicam_calibratioon" output="screen"
+        args="--size $(arg chessboard_x)x$(arg chessboard_y) --square $(arg square_size_m) image:=$(arg camera_topic)"/>
+</launch>
