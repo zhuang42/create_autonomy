@@ -9,11 +9,6 @@ project(ca_visual_odometry)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   camera_calibration
-  gscam
-  image_common
-  image_pipeline
-  vision_opencv
-  viso2
 )
 
 ## System dependencies are found with CMake's conventions

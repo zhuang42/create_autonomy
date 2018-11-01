@@ -49,24 +49,8 @@
   <!-- Use doc_depend for packages you need only for building documentation: -->
   <!--   <doc_depend>doxygen</doc_depend> -->
   <buildtool_depend>catkin</buildtool_depend>
-  <build_depend>camera_calibration</build_depend>
-  <build_depend>gscam</build_depend>
-  <build_depend>image_common</build_depend>
-  <build_depend>image_pipeline</build_depend>
-  <build_depend>vision_opencv</build_depend>
-  <build_depend>viso2</build_depend>
-  <build_export_depend>camera_calibration</build_export_depend>
-  <build_export_depend>gscam</build_export_depend>
-  <build_export_depend>image_common</build_export_depend>
-  <build_export_depend>image_pipeline</build_export_depend>
-  <build_export_depend>vision_opencv</build_export_depend>
-  <build_export_depend>viso2</build_export_depend>
   <exec_depend>camera_calibration</exec_depend>
   <exec_depend>gscam</exec_depend>
-  <exec_depend>image_common</exec_depend>
-  <exec_depend>image_pipeline</exec_depend>
-  <exec_depend>vision_opencv</exec_depend>
-  <exec_depend>viso2</exec_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->
