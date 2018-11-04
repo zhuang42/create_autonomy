@@ -1,5 +1,5 @@
 <launch>
     <include file="$(find ca_visual_odometry)/launch/stream_test.launch" >
-        <param name="camera_info_url" value="package://gscam/examples/raspicam.yaml" />
+        <param name="camera_info_url" value="$(find ca_visual_odometry)/config/ost.yaml" />
     </include>
 </launch>
