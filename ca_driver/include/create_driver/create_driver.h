@@ -79,6 +79,7 @@ private:
   std_msgs::Bool is_wall_msg_;
   ca_msgs::Overcurrent is_overcurrent_msg_;
   bool is_running_slowly_;
+  std_msgs::Int16 angle_msg_;
 
   // ROS params
   double loop_hz_;
@@ -116,6 +117,7 @@ private:
   void publishWheeldrop();
   void publishIsWall();
   void publishOvercurrent();
+  void publishAngle();
 
 protected:
   ros::NodeHandle nh_;
@@ -154,6 +156,7 @@ protected:
   ros::Publisher wheel_joint_pub_;
   ros::Publisher wall_pub_;
   ros::Publisher overcurrent_pub_;
+  ros::Publisher angle_pub_;
 
 public:
   CreateDriver(ros::NodeHandle& nh, ros::NodeHandle& ph);

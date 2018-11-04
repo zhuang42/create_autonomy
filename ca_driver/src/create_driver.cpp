@@ -111,6 +111,7 @@ CreateDriver::CreateDriver(ros::NodeHandle& nh, ros::NodeHandle& ph)
   wheeldrop_pub_ = nh.advertise<ca_msgs::Wheeldrop>("wheeldrop", 30);
   wheel_joint_pub_ = nh.advertise<sensor_msgs::JointState>("joint_states", 10);
   wall_pub_ = nh.advertise<std_msgs::Bool>("wall", 30);
+  angle_pub_ = nh.advertise<std_msgs::Int16>("angle", 30);
   //overcurrent_pub_ = nh.advertise<ca_msgs::Overcurrent>("overcurrent", 30);
 
   // Setup diagnostics
@@ -289,6 +290,7 @@ bool CreateDriver::update()
   publishWheeldrop();
   publishIsWall();
   //publishOvercurrent();
+  publishAngle();
 
   // If last velocity command was sent longer than latch duration, stop robot
   if (ros::Time::now() - last_cmd_vel_time_ >= ros::Duration(latch_duration_))
@@ -673,6 +675,13 @@ void CreateDriver::publishOvercurrent()
     is_overcurrent_msg_.is_side_brush_overcurrent = robot_->isSideBrushOvercurrent();
 
     overcurrent_pub_.publish(is_overcurrent_msg_);
+}
+
+void CreateDriver::publishAngle()
+{
+  angle_msg_.data = robot_->getAngle();
+
+  angle_pub_.publish(angle_msg_);
 }
 
 void CreateDriver::spinOnce()
