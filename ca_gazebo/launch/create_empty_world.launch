@@ -37,4 +37,9 @@
 	<arg name="env" value="$(arg env)"/>
   </include>
 
+	<!-- Visual odometry -->
+	<include file="$(find ca_visual_odometry)/launch/vo_raspicam.launch">
+		<arg name="simulation" value="false"/>
+	</include>
+
 </launch>
