@@ -18,6 +18,13 @@ add_message_files(
   Wheeldrop.msg
 )
 
+add_service_files(
+  DIRECTORY srv
+  FILES 
+    SetDigitalOutputs.srv
+    SetTurtlebotMode.srv
+)
+
 generate_messages(
   DEPENDENCIES
   std_msgs
