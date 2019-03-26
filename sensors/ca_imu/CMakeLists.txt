@@ -14,9 +14,6 @@ if( ${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm" )
     tf
   )
 
-  catkin_package(CATKIN_DEPENDS roscpp)
-  include_directories(${catkin_INCLUDE_DIRS})
-
 else()
   message( STATUS "Avoid compiling ca_imu because it's not an ARM architecture" )
 endif()
