@@ -1,0 +1,4 @@
+scan_height: 1
+scan_time: 0.033
+range_min: 0.45
+range_max: 10.0
