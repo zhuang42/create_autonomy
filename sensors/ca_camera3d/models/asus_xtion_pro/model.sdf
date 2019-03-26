@@ -1,0 +1,63 @@
+<?xml version="1.0"?>
+<sdf version="1.4">
+  <model name="asus_xtion_pro">
+    <link name="asus_xtion_pro_link">
+      <gravity>false</gravity>
+      <inertial>
+        <mass>0.17</mass>
+      </inertial>
+      <collision name="collision">
+        <geometry>
+          <box>
+            <size>0.073000 0.276000 0.072000</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="visual">
+        <pose>-0.015 0.0035 0.004 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://asus_xtion_pro/meshes/xtion_pro_camera.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <sensor type="depth" name="camera">
+        <always_on>true</always_on>
+        <update_rate>30.0</update_rate>
+        <camera>
+          <horizontal_fov>1.0471975511965976</horizontal_fov>
+          <image>
+            <format>R8G8B8</format>
+            <width>640</width>
+            <height>480</height>
+          </image>
+          <clip>
+            <near>0.05</near>
+            <far>8.0</far>
+          </clip>
+        </camera>
+        <plugin name="asus_xtion_pro_camera_controller" filename="libgazebo_ros_openni_kinect.so">
+          <cameraName>asus_xtion_pro</cameraName>
+          <alwaysOn>true</alwaysOn>
+          <updateRate>30.0</updateRate>
+          <imageTopicName>rgb/image_raw</imageTopicName>
+          <depthImageTopicName>depth/image_raw</depthImageTopicName>
+          <pointCloudTopicName>depth/points</pointCloudTopicName>
+          <cameraInfoTopicName>rgb/camera_info</cameraInfoTopicName>
+          <depthImageCameraInfoTopicName>depth/camera_info</depthImageCameraInfoTopicName>
+          <frameName>asus_xtion_pro_depth_optical_frame</frameName>
+          <baseline>0.1</baseline>
+          <distortionK1>0.0</distortionK1>
+          <distortionK2>0.0</distortionK2>
+          <distortionK3>0.0</distortionK3>
+          <distortionT1>0.0</distortionT1>
+          <distortionT2>0.0</distortionT2>
+          <pointCloudCutoff>0.5</pointCloudCutoff>
+          <pointCloudCutoffMax>5.0</pointCloudCutoffMax>
+        </plugin>
+	<visualize>true</visualize>
+      </sensor>
+    </link>
+    <static>1</static>
+  </model>
+</sdf>
