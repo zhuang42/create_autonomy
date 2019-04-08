@@ -16,6 +16,9 @@ if [[ $IMAGE_NAME = *"nvidia"* ]]; then
   NVIDIA_FLAG="--runtime=nvidia"
 fi
 
+WORKSPACE=" \
+    -v /home/$USER/create_ws/src:/create_ws/src"
+
 xhost +
 docker run -it \
     --privileged --rm \
@@ -25,7 +28,7 @@ docker run -it \
     "--network=host" \
     --env="DISPLAY"  \
     --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
-    --volume="/home/$USER/create_ws/src:/create_ws/src" \
+    $WORKSPACE \
     -e ROS_HOSTNAME=localhost \
     -e ROS_MASTER_URI=http://localhost:11311 \
     $NVIDIA_FLAG \

@@ -6,7 +6,7 @@ ENV ROS1_DISTRO=melodic
 USER root
 
 # Setup sources.list for Gazebo
-RUN echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable bionic main" > /etc/apt/sources.list.d/gazebo-stable.list
+RUN echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable `lsb_release -cs` main" > /etc/apt/sources.list.d/gazebo-stable.list
 
 # Setup keys for Gazebo
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys D2486D2DD83DB69272AFE98867170598AF249743
@@ -18,4 +18,6 @@ RUN apt-get update && \
     ros-$ROS1_DISTRO-gazebo-ros-pkgs \
     ros-$ROS1_DISTRO-gazebo-ros-control
 
-CMD tmux
+USER $USER
+
+CMD [ "tmux" ]

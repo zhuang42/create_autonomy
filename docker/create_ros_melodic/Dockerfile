@@ -2,14 +2,15 @@ FROM create_ubuntu_bionic
 LABEL maintainer="Emiliano Borghi"
 
 ENV ROS1_DISTRO=melodic
+ENV USER=create
 
 USER root
 
 # Setup sources.list for ROS
-RUN echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list
+RUN echo "deb http://packages.ros.org/ros/ubuntu `lsb_release -cs` main" > /etc/apt/sources.list.d/ros-latest.list
 
 # Setup keys for ROS
-RUN apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net:80 --recv-key 421C365BD9FF1F717815A3895523BAEEB01FA116
+RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-key 421C365BD9FF1F717815A3895523BAEEB01FA116
 
 # Install ROS packages
 RUN apt-get update && \
@@ -54,16 +55,16 @@ RUN apt-get update && \
 
 RUN pip install --upgrade pip
 
-USER create
-RUN echo ". /opt/ros/$ROS1_DISTRO/setup.bash" >> /home/create/.bashrc
+USER $USER
+RUN echo ". /opt/ros/$ROS1_DISTRO/setup.bash" >> /home/$USER/.bashrc
 USER root
 
 # Workspace
-RUN mkdir -p /create_ws/src/ && \
-    chown -R create /create_ws
-USER create
-WORKDIR /create_ws/
+ENV WS_DIR=/create_ws
+RUN mkdir -p $WS_DIR/src && \
+    chown -R $USER $WS_DIR
+USER $USER
+WORKDIR $WS_DIR
 RUN rosdep update
-USER root
 
-CMD tmux
+CMD [ "tmux" ]
