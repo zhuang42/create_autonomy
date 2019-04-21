@@ -9,10 +9,11 @@
   </include>
 
   <!-- IMU -->
-  <include file="$(find ca_imu)/launch/imu.launch"/>
+  <!-- <include file="$(find ca_imu)/launch/imu.launch"/> -->
 
   <!-- TODO: Add sensors:
   * Intel RealSense R200
   * RPLidar A2
- -->
+  -->
+  <include file="$(find ca_camera3d)/launch/asus_xtion_pro.launch"/>
 </launch>
