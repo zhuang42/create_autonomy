@@ -90,16 +90,17 @@ void VirtualWallSensorPlugin::OnUpdate()
 {
   double detected_range = this->sensor_->Range(0);
   ignition::math::Vector3d laser_dir(1., 0., 0.);
-  // ignition::math::Pose3d laser_pose(0., 0., 0.014, 0., 0., 0.);
-  ignition::math::Pose3d sensor_pose(0.145, 0., 0.0308, 0., 0., 0.);
+  ignition::math::Pose3d sensor_pose(-0.145, 0., 0.068, 0., 0., 0.);
+  // 0.145, 0.308
+  const auto & parent_pose = world_->EntityByName(sensor_->ParentName())->WorldPose();
+  const ignition::math::Pose3d & laser_pose = parent_pose + sensor_->Pose();
 
-  const ignition::math::Pose3d & laser_pose = sensor_->Pose();
   laser_dir = laser_pose.Rot().RotateVector(laser_dir);
-  ROS_INFO_NAMED("virtual_wall_plugin", "pose x=%f y=%f z=%f",
+  ROS_DEBUG_NAMED("virtual_wall_plugin", "pose x=%f y=%f z=%f",
     laser_pose.Pos().X(),
     laser_pose.Pos().Y(),
     laser_pose.Pos().Z());
-  ROS_INFO_NAMED("virtual_wall_plugin", "dir x=%f y=%f z=%f",
+  ROS_DEBUG_NAMED("virtual_wall_plugin", "dir x=%f y=%f z=%f",
     laser_dir.X(),
     laser_dir.Y(),
     laser_dir.Z());
@@ -110,23 +111,36 @@ void VirtualWallSensorPlugin::OnUpdate()
 
     const ignition::math::Pose3d & robot_pose = model->WorldPose();
     sensor_pose = robot_pose + sensor_pose;
-    
+    // const auto & link = model->GetLink("virtual_wall_sensor_link");
+    // if (nullptr == link) {
+    //   ROS_DEBUG_NAMED("virtual_wall_plugin", "fuck");
+    // } else {
+    //   ROS_DEBUG_NAMED("virtual_wall_plugin", "sensor_pose_link x=%f y=%f z=%f",
+    //     link->WorldPose().Pos().X(),
+    //     link->WorldPose().Pos().Y(),
+    //     link->WorldPose().Pos().Z());
+    // }
+    ROS_DEBUG_NAMED("virtual_wall_plugin", "sensor_pose x=%f y=%f z=%f",
+        sensor_pose.Pos().X(),
+        sensor_pose.Pos().Y(),
+        sensor_pose.Pos().Z());
+
     // distance from P to straight line X=X0+lambda*V is:
     // sin(phi)*abs(P-X0) where cos(phi)=(P-X0)*V/abs(P-X0)
     const auto & error = (sensor_pose.Pos() - laser_pose.Pos());
     double phi = std::acos(error.Dot(laser_dir) / error.Length());
     double d = error.Length() * std::sin(phi);
     double lambda = (sensor_pose.Pos().X() - laser_pose.Pos().X()) / laser_dir.X();
-    ROS_INFO_NAMED("virtual_wall_plugin", "d=%f lambda=%f detected_range=%f error=%f",
+    ROS_DEBUG_NAMED("virtual_wall_plugin", "d=%f lambda=%f detected_range=%f error=%f",
         d,
         lambda,
         detected_range,
         error.Length());
 
     std_msgs::Bool x;
-    bool in_range = detected_range > (error.Length() - 0.1);
+    bool in_range = detected_range > (error.Length() - 0.1) && error.Length() < this->sensor_->RangeMax();
     x.data = d < 0.1 && lambda > 0 && in_range;
-    ROS_INFO_NAMED("virtual_wall_plugin", "result=%d",
+    ROS_DEBUG_NAMED("virtual_wall_plugin", "result=%d",
       x.data);
     pub.publish(x);
   }

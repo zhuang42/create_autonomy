@@ -51,7 +51,7 @@
       <origin xyz="0 -0.04 0.13" rpy="0 0 0"/>
     </xacro:imu_sensor>
     <xacro:virtual_wall_sensor name="virtual_wall_sensor" fov="0.1">
-      <origin xyz="0.145 0 ${base_link_offset_z}" rpy="0 0 0"/>
+      <origin xyz="-0.145 0 ${base_link_offset_z}" rpy="0 0 0"/>
     </xacro:virtual_wall_sensor>
 
     <xacro:create_wheel prefix="left" y_offset="${wheel_separation / 2}" wheel_radius="${wheel_radius}" wheel_width="${wheel_width}"/>
