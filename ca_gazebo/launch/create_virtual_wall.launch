@@ -1,0 +1,9 @@
+<launch>
+	<arg name="env" default="empty"/>
+  	<arg name="paused" value="$(optenv PAUSED false)"/>
+	<arg name="gui" value="$(optenv GUI true)"/>
+	<arg name="debug" value="$(optenv DEBUG false)"/>
+
+	<include file="$(find ca_gazebo)/launch/create_empty_world.launch" pass_all_args="true"/>>
+	<include file="$(find ca_gazebo)/launch/spawn_virtual_wall.launch"/>
+</launch>
