@@ -1,0 +1,9 @@
+<launch>
+  <param name="create1/amcl/initial_pose_x" value="2"/>
+  <param name="create1/amcl/initial_pose_y" value="0"/>
+  <param name="create1/amcl/initial_pose_a" value="0"/>
+
+  <include file="$(find ca_gazebo)/launch/create_empty_world.launch">
+    <arg name="env" value="two_floors_house"/>
+  </include>
+</launch>
