@@ -1,10 +1,10 @@
 <?xml version="1.0" ?>
 <robot xmlns:xacro="http://ros.org/wiki/xacro">
 
-<xacro:macro name="virtual_wall_sensor" params="name fov *origin">
+<xacro:macro name="omni_sensor" params="name diameter *origin">
 
   <xacro:include filename="$(find ca_description)/urdf/common_properties.xacro"/>
-  <xacro:include filename="$(find ca_description)/urdf/sensors/virtual_wall_sensor_gazebo.xacro"/>
+  <xacro:include filename="$(find ca_description)/urdf/sensors/omni_sensor_gazebo.xacro"/>
 
   <xacro:property name="parent_link" value="base_link"/>
   <xacro:property name="link_name" value="${name}_link"/>
@@ -19,7 +19,7 @@
     <xacro:dummy_inertia/>
   </link>
 
-  <xacro:virtual_wall_sensor_gazebo name="${name}" fov="${fov}"/>
+  <xacro:omni_sensor_gazebo name="${name}" diameter="${diameter}"/>
 
 </xacro:macro>
 

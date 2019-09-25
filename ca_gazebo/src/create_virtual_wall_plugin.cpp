@@ -28,7 +28,7 @@ void VirtualWallSensorPlugin::Load(gazebo::sensors::SensorPtr sensor, sdf::Eleme
   if (!ros::isInitialized()) {
       int argc = 0;
       char** argv = NULL;
-      ros::init(argc,argv,"bumper_node",ros::init_options::AnonymousName);
+      ros::init(argc, argv, "virtual_wall_node");
   }
   this->rosnode_ = std::make_unique<ros::NodeHandle>();
   this->updateNewEntity_ = event::Events::ConnectAddEntity(
@@ -56,7 +56,7 @@ void VirtualWallSensorPlugin::OnAddEntity()
       const std::string & name = model->GetName();
       ROS_DEBUG_NAMED("virtual_wall_plugin", "checking model %s", name.c_str());
       if (name.size() < create2_model_name_prefix_length + 1) {
-        ROS_DEBUG_NAMED("virtual_wall_plugin", "model name is short");
+        ROS_DEBUG_NAMED("virtual_wall_plugin", "model name `%s` is short", name.c_str());
         return false;
       }
       if (std::strncmp(
@@ -64,23 +64,26 @@ void VirtualWallSensorPlugin::OnAddEntity()
         create2_model_name_prefix,
         create2_model_name_prefix_length) != 0)
       {
-        ROS_DEBUG_NAMED("virtual_wall_plugin", "model name doesn't start with prefix");
+        ROS_DEBUG_NAMED(
+          "virtual_wall_plugin",
+          "model name `%s` doesn't start with prefix `%s`",
+          name.c_str(),
+          create2_model_name_prefix);
         return false;
       }
-      ROS_DEBUG_NAMED("virtual_wall_plugin", "%s", name.substr(create2_model_name_prefix_length).c_str());
       std::istringstream iss(name.substr(create2_model_name_prefix_length));
       size_t x;
       iss >> x;
-      if (iss) {
+      if (iss && iss.eof()) {
         std::ostringstream oss;
         oss << "create" << x << "/virtual_wall";
-        ROS_DEBUG_NAMED("virtual_wall_plugin", "model name ok");
+        ROS_DEBUG_NAMED("virtual_wall_plugin", "model name `%s` ok", name.c_str());
         this->pubs_.emplace_back(
           this->rosnode_->advertise<std_msgs::Bool>(
             oss.str().c_str(), 1));
         return true;
       }
-      ROS_DEBUG_NAMED("virtual_wall_plugin", "model name doesn't end with a number");
+      ROS_DEBUG_NAMED("virtual_wall_plugin", "model name `%s` doesn't end with a number", name.c_str());
       return false;
     });
   ROS_DEBUG_NAMED("virtual_wall_plugin", "number of create2: %zu", create_2_models_.size());
@@ -91,7 +94,6 @@ void VirtualWallSensorPlugin::OnUpdate()
   double detected_range = this->sensor_->Range(0);
   ignition::math::Vector3d laser_dir(1., 0., 0.);
   ignition::math::Pose3d sensor_pose(-0.145, 0., 0.068, 0., 0., 0.);
-  // 0.145, 0.308
   const auto & parent_pose = world_->EntityByName(sensor_->ParentName())->WorldPose();
   const ignition::math::Pose3d & laser_pose = parent_pose + sensor_->Pose();
 
@@ -111,15 +113,6 @@ void VirtualWallSensorPlugin::OnUpdate()
 
     const ignition::math::Pose3d & robot_pose = model->WorldPose();
     sensor_pose = robot_pose + sensor_pose;
-    // const auto & link = model->GetLink("virtual_wall_sensor_link");
-    // if (nullptr == link) {
-    //   ROS_DEBUG_NAMED("virtual_wall_plugin", "fuck");
-    // } else {
-    //   ROS_DEBUG_NAMED("virtual_wall_plugin", "sensor_pose_link x=%f y=%f z=%f",
-    //     link->WorldPose().Pos().X(),
-    //     link->WorldPose().Pos().Y(),
-    //     link->WorldPose().Pos().Z());
-    // }
     ROS_DEBUG_NAMED("virtual_wall_plugin", "sensor_pose x=%f y=%f z=%f",
         sensor_pose.Pos().X(),
         sensor_pose.Pos().Y(),
@@ -137,11 +130,11 @@ void VirtualWallSensorPlugin::OnUpdate()
         detected_range,
         error.Length());
 
-    std_msgs::Bool x;
+    std_msgs::Bool msg;
     bool in_range = detected_range > (error.Length() - 0.1) && error.Length() < this->sensor_->RangeMax();
-    x.data = d < 0.1 && lambda > 0 && in_range;
+    msg.data = d < 0.1 && lambda > 0 && in_range;
     ROS_DEBUG_NAMED("virtual_wall_plugin", "result=%d",
-      x.data);
-    pub.publish(x);
+      msg.data);
+    pub.publish(msg);
   }
 }
