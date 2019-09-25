@@ -11,10 +11,12 @@
 
 #include <ca_gazebo/create_virtual_wall_plugin.hh>
 
+using gazebo::VirtualWallSensorPlugin;
+using gazebo::common::Time;
+
 static const char create2_model_name_prefix[] = "irobot_create2.";
 static const size_t create2_model_name_prefix_length = sizeof(create2_model_name_prefix) - 1;
-
-using gazebo::VirtualWallSensorPlugin;
+static const Time update_rate = Time(0, Time::SecToNano(0.01)); // 100 Hz
 
 GZ_REGISTER_SENSOR_PLUGIN(VirtualWallSensorPlugin)
 
@@ -39,6 +41,7 @@ void VirtualWallSensorPlugin::Load(gazebo::sensors::SensorPtr sensor, sdf::Eleme
   this->updateConnection_ = event::Events::ConnectWorldUpdateBegin(
       std::bind(&VirtualWallSensorPlugin::OnUpdate, this));
   ROS_DEBUG_NAMED("virtual_wall_plugin", "Loaded");
+  this->prev_update_time_ = Time::GetWallTime();
 }
 
 void VirtualWallSensorPlugin::OnAddEntity()
@@ -91,6 +94,9 @@ void VirtualWallSensorPlugin::OnAddEntity()
 
 void VirtualWallSensorPlugin::OnUpdate()
 {
+  if ((Time::GetWallTime() - this->prev_update_time_) < update_rate) {
+    return;
+  }
   double detected_range = this->sensor_->Range(0);
   ignition::math::Vector3d laser_dir(1., 0., 0.);
   ignition::math::Pose3d sensor_pose(-0.145, 0., 0.068, 0., 0., 0.);
@@ -137,4 +143,5 @@ void VirtualWallSensorPlugin::OnUpdate()
       msg.data);
     pub.publish(msg);
   }
+  this->prev_update_time_ = Time::GetWallTime();
 }
