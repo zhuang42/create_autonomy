@@ -26,7 +26,7 @@ private:
   physics::WorldPtr world_;
   event::ConnectionPtr updateConnection_;
   event::ConnectionPtr updateNewEntity_;
-  common::Time prev_update_time_;
+  ros::Time prev_update_time_;
 
   std::unique_ptr<ros::NodeHandle> rosnode_;
   std::vector<ros::Publisher> pubs_;

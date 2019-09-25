@@ -12,11 +12,10 @@
 #include <ca_gazebo/create_virtual_wall_plugin.hh>
 
 using gazebo::VirtualWallSensorPlugin;
-using gazebo::common::Time;
 
 static const char create2_model_name_prefix[] = "irobot_create2.";
 static const size_t create2_model_name_prefix_length = sizeof(create2_model_name_prefix) - 1;
-static const Time update_rate = Time(0, Time::SecToNano(0.01)); // 100 Hz
+static const ros::Duration update_rate = ros::Duration(0.01); // 100 Hz
 
 GZ_REGISTER_SENSOR_PLUGIN(VirtualWallSensorPlugin)
 
@@ -41,7 +40,7 @@ void VirtualWallSensorPlugin::Load(gazebo::sensors::SensorPtr sensor, sdf::Eleme
   this->updateConnection_ = event::Events::ConnectWorldUpdateBegin(
       std::bind(&VirtualWallSensorPlugin::OnUpdate, this));
   ROS_DEBUG_NAMED("virtual_wall_plugin", "Loaded");
-  this->prev_update_time_ = Time::GetWallTime();
+  this->prev_update_time_ = ros::Time::now();
 }
 
 void VirtualWallSensorPlugin::OnAddEntity()
@@ -94,12 +93,12 @@ void VirtualWallSensorPlugin::OnAddEntity()
 
 void VirtualWallSensorPlugin::OnUpdate()
 {
-  if ((Time::GetWallTime() - this->prev_update_time_) < update_rate) {
+  if ((ros::Time::now() - this->prev_update_time_) < update_rate) {
     return;
   }
   double detected_range = this->sensor_->Range(0);
   ignition::math::Vector3d laser_dir(1., 0., 0.);
-  ignition::math::Pose3d sensor_pose(-0.145, 0., 0.068, 0., 0., 0.);
+  ignition::math::Vector3d sensor_offset(0.145, 0., 0.068);
   const auto & parent_pose = world_->EntityByName(sensor_->ParentName())->WorldPose();
   const ignition::math::Pose3d & laser_pose = parent_pose + sensor_->Pose();
 
@@ -118,8 +117,9 @@ void VirtualWallSensorPlugin::OnUpdate()
     const auto & pub = this->pubs_[i];
 
     const ignition::math::Pose3d & robot_pose = model->WorldPose();
-    sensor_pose = robot_pose + sensor_pose;
-    ROS_DEBUG_NAMED("virtual_wall_plugin", "sensor_pose x=%f y=%f z=%f",
+    sensor_offset = robot_pose.Rot().RotateVector(sensor_offset);
+    ignition::math::Pose3d sensor_pose = robot_pose + sensor_pose;
+    ROS_INFO_NAMED("virtual_wall_plugin", "sensor_pose x=%f y=%f z=%f",
         sensor_pose.Pos().X(),
         sensor_pose.Pos().Y(),
         sensor_pose.Pos().Z());
@@ -130,7 +130,7 @@ void VirtualWallSensorPlugin::OnUpdate()
     double phi = std::acos(error.Dot(laser_dir) / error.Length());
     double d = error.Length() * std::sin(phi);
     double lambda = (sensor_pose.Pos().X() - laser_pose.Pos().X()) / laser_dir.X();
-    ROS_DEBUG_NAMED("virtual_wall_plugin", "d=%f lambda=%f detected_range=%f error=%f",
+    ROS_INFO_NAMED("virtual_wall_plugin", "d=%f lambda=%f detected_range=%f error=%f",
         d,
         lambda,
         detected_range,
@@ -143,5 +143,5 @@ void VirtualWallSensorPlugin::OnUpdate()
       msg.data);
     pub.publish(msg);
   }
-  this->prev_update_time_ = Time::GetWallTime();
+  this->prev_update_time_ = ros::Time::now();
 }
