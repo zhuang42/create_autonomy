@@ -5,9 +5,10 @@ import numpy as np
 
 import rospy
 import tf2_ros
+
 from tf import transformations
 
-from geometry_msgs.msg import TwistStamped
+from geometry_msgs.msg import Twist
 
 
 class SwarmControllerNode(object):
@@ -24,7 +25,7 @@ class SwarmControllerNode(object):
                 name=robot_name,
                 frame=robot_name + robot_frame_suffix,
                 cmd_vel=rospy.Publisher(
-                    robot_name + '/cmd_vel', TwistStamped, queue_size=1
+                    robot_name + '/cmd_vel', Twist, queue_size=1
                 )
             ) for robot_name in range(rospy.get_param('~swarm_robots'))
         ]
@@ -34,17 +35,17 @@ class SwarmControllerNode(object):
         self._body_frame = rospy.get_param('~body_frame')
 
         self._swarm_cmd_vel_sub = rospy.Subscriber(
-            'cmd_vel', TwistStamped, self._on_swarm_cmd_vel
+            'cmd_vel', Twist, self._on_swarm_cmd_vel
         )
 
     def _on_swarm_cmd_vel(self, swarm_twist):
-        v = swarm_twist.twist.linear.x
-        w = swarm_twist.twist.angular.z
+        v = swarm_twist.linear.x
+        w = swarm_twist.angular.z
         R = v / w if w != 0. else np.inf
         for robot in self._swarm_robots:
             try:
                 robot_transform_in_body_frame = self._tf_buffer.lookup_transform(
-                    self._body_frame, robot.frame, message.stamp
+                    self._body_frame, robot.frame, rospy.Time()
                 ).transform
             except (tf2_ros.LookupException,
                     tf2_ros.ConnectivityException,
@@ -69,10 +70,9 @@ class SwarmControllerNode(object):
                     robot.name, self._body_frame
                 )
                 continue
-            robot_twist = TwistStamped()
-            robot_twist.header.stamp = swarm_twist.header.stamp
-            robot_twist.twist.linear.x = w * (R - y)
-            robot_twist.twist.angular.z = w
+            robot_twist = Twist()
+            robot_twist.linear.x = w * (R - y)
+            robot_twist.angular.z = w
             robot.cmd_vel.publish(robot_twist)
 
     def spin(self):
