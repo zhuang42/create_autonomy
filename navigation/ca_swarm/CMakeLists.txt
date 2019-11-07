@@ -19,8 +19,7 @@ find_package(catkin REQUIRED COMPONENTS
 ###################################
 ## catkin specific configuration ##
 ###################################
-catkin_package(
-)
+catkin_package()
 
 ###########
 ## Build ##
@@ -36,7 +35,9 @@ include_directories(
 ## Install ##
 #############
 
+## Mark executable scripts (Python etc.) for installation
+## in contrast to setup.py, you can choose the destination
 install(PROGRAMS
-  scripts/swarm_controller
+  scripts/swarm_controller_node
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
