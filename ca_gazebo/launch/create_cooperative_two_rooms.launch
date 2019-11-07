@@ -7,6 +7,11 @@
   <param name="create2/amcl/initial_pose_y" value="$(optenv Y2 1)"/>
   <param name="create2/amcl/initial_pose_a" value="$(optenv A2 3.1416)"/>
 
+  <node pkg="ca_swarm" type="swarm_controller_node" output="screen">
+    <rosparam name="swarm_robots">[create1, create2]</rosparam>
+    <param name="body_frame" value="unit_box"/>
+  </node>
+
   <include file="$(find ca_gazebo)/launch/create_empty_world.launch">
     <arg name="env" value="two_rooms"/>
   </include>

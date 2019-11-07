@@ -16,16 +16,16 @@ class SwarmControllerNode(object):
     def __init__(self):
         rospy.init_node('swarm_controller')
         robot_frame_suffix = rospy.get_param(
-            '~robot_frame_suffix', 'base_link'
+            '~robot_frame_suffix', '_tf/base_link'
         )
         self._swarm_robots = [
             SwarmRobotProxy(
                 name=robot_name,
-                frame=robot_name + '/' + robot_frame_suffix,
+                frame=robot_name + robot_frame_suffix,
                 cmd_vel=rospy.Publisher(
                     robot_name + '/cmd_vel', TwistStamped, queue_size=1
                 )
-            ) for robot_name in rospy.get_param('~swarm_robots')
+            ) for robot_name in range(rospy.get_param('~swarm_robots'))
         ]
 
         self._tf_buffer = tf2_ros.Buffer()
