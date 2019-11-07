@@ -10,10 +10,9 @@ from tf import transformations
 
 from geometry_msgs.msg import Twist
 
+SwarmRobotProxy = namedtuple('SwarmRobotProxy', ['name', 'frame', 'cmd_vel'])
 
 class SwarmControllerNode(object):
-
-    SwarmRobotProxy = namedtuple('SwarmRobotProxy', ['name', 'frame', 'cmd_vel'])
 
     def __init__(self):
         rospy.init_node('swarm_controller')
@@ -27,7 +26,7 @@ class SwarmControllerNode(object):
                 cmd_vel=rospy.Publisher(
                     robot_name + '/cmd_vel', Twist, queue_size=1
                 )
-            ) for robot_name in range(rospy.get_param('~swarm_robots'))
+            ) for robot_name in rospy.get_param('~swarm_robots')
         ]
 
         self._tf_buffer = tf2_ros.Buffer()
