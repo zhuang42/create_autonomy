@@ -1,0 +1,90 @@
+#! /usr/bin/env python
+
+import numpy
+import rospy
+import tf2_ros
+from tf import transformations
+from collections import namedtuple
+
+from geometry_msgs.msg import TwistStamped
+
+
+class SwarmControllerNode(object):
+
+    SwarmRobotProxy = namedtuple('SwarmRobotProxy', ['name', 'frame', 'cmd_vel'])
+
+    def __init__(self):
+        rospy.init_node('swarm_controller')
+        robot_frame_suffix = rospy.get_param(
+            '~robot_frame_suffix', 'base_link'
+        )
+        self._swarm_robots = [
+            SwarmRobotProxy(
+                name=robot_name,
+                frame=robot_name + '/' + robot_frame_suffix,
+                cmd_vel=rospy.Publisher(
+                    robot_name + '/cmd_vel', TwistStamped, queue_size=1
+                )
+            ) for robot_name in rospy.get_param('~swarm_robots')
+        ]
+
+        self._tf_buffer = tf2_ros.Buffer()
+        self._tf_listener = tf2_ros.TransformListener(self._tf_buffer)
+        self._body_frame = rospy.get_param('~body_frame')
+
+        self._swarm_cmd_vel_sub = rospy.Subscriber(
+            'cmd_vel', TwistStamped, self._on_swarm_cmd_vel
+        )
+
+    def _on_swarm_cmd_vel(self, swarm_twist):
+        v = swarm_twist.twist.linear.x
+        w = swarm_twist.twist.angular.z
+        R = v / w if w != 0. else np.inf
+        for robot in self._swarm_robots:
+            try:
+                robot_transform_in_body_frame = self._tf_buffer.lookup_transform(
+                    self._body_frame, robot.frame, message.stamp
+                ).transform
+            except (tf2_ros.LookupException,
+                    tf2_ros.ConnectivityException,
+                    tf2_ros.ExtrapolationException) as e:
+                rospy.logwarn(
+                    'cannot lookup transform from %s to %s: %s',
+                    robot.frame, self._body_frame, str(e)
+                )
+                continue
+            x = robot_transform_in_body_frame.translation.x
+            y = robot_transform_in_body_frame.translation.y
+            _, _, yaw = transformations.euler_from_quaternion([
+                robot_transform_in_body_frame.orientation.x,
+                robot_transform_in_body_frame.orientation.y,
+                robot_transform_in_body_frame.orientation.z,
+                robot_transform_in_body_frame.orientation.w
+            ])
+            if not np.isclose(yaw, 0.):
+                rospy.logerr(
+                    'normal at point of contact between %s'
+                    ' and body is not axis-aligned (wrt %s)',
+                    robot.name, self._body_frame
+                )
+                continue
+            robot_twist = TwistStamped()
+            robot_twist.header.stamp = swarm_twist.header.stamp
+            robot_twist.twist.linear.x = w * (R - y)
+            robot_twist.twist.angular.z = w
+            robot.cmd_vel.publish(robot_twist)
+
+    def spin(self):
+        rospy.spin()
+
+
+def main():
+    node = SwarmControllerNode()
+    try:
+        node.spin()
+    except KeyboardInterrupt:
+        pass
+
+
+if __name__ == '__main__':
+    main()

@@ -15,8 +15,28 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   tf
 )
-catkin_package()
+
+###################################
+## catkin specific configuration ##
+###################################
+catkin_package(
+)
+
+###########
+## Build ##
+###########
 
 include_directories(
   ${catkin_INCLUDE_DIRS}
+  geometry_msgs
+  rospy
+)
+
+#############
+## Install ##
+#############
+
+install(PROGRAMS
+  scripts/swarm_controller
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
