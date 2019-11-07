@@ -83,7 +83,7 @@ def main():
     node = SwarmControllerNode()
     try:
         node.spin()
-    except KeyboardInterrupt:
+    except rospy.ROSInterruptException:
         pass
 
 
