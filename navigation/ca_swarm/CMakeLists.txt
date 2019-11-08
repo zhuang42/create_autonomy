@@ -15,8 +15,29 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   tf
 )
+
+###################################
+## catkin specific configuration ##
+###################################
 catkin_package()
+
+###########
+## Build ##
+###########
 
 include_directories(
   ${catkin_INCLUDE_DIRS}
+  geometry_msgs
+  rospy
+)
+
+#############
+## Install ##
+#############
+
+## Mark executable scripts (Python etc.) for installation
+## in contrast to setup.py, you can choose the destination
+install(PROGRAMS
+  scripts/swarm_controller_node
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

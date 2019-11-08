@@ -20,7 +20,7 @@ class MoveBaseSquare():
 
         # Append each of the four waypoints to the list.  Each waypoint
         # is a pose consisting of a position and orientation in the map frame.
-        waypoints.append(Pose(Point(1, 1, 0.0), Quaternion(0,0,0,1)));
+        waypoints.append(Pose(Point(10.0, 0.62, 0.0), Quaternion(0,0,0,1)))
 
         # Initialize the visualization markers for RViz
         self.init_markers()
@@ -30,9 +30,6 @@ class MoveBaseSquare():
             p = Point()
             p = waypoint.position
             self.markers.points.append(p)
-
-        # Publisher to manually control the robot (e.g. to stop it)
-        self.cmd_vel_pub = rospy.Publisher('cmd_vel', Twist, queue_size=1)
 
         # Subscribe to the move_base action server
         self.move_base = actionlib.SimpleActionClient("move_base", MoveBaseAction)
@@ -121,9 +118,6 @@ class MoveBaseSquare():
         # Cancel any active goals
         self.move_base.cancel_goal()
         rospy.sleep(2)
-        # Stop the robot
-        self.cmd_vel_pub.publish(Twist())
-        rospy.sleep(1)
 
 if __name__ == '__main__':
     try:
