@@ -12,16 +12,10 @@
 
     namespace gazebo
     {
-      /// \brief A Virtual Wall publisher
+    /// \brief A Virtual Wall publisher
       class GazeboVirtualWallDetector : public ModelPlugin
     {
         public:
-
-        ///Constructor
-        GazeboVirtualWallDetector();   
-
-        ///Destructor
-        ~GazeboVirtualWallDetector();
 
     /// \brief Load the plugin
     /// \param take in SDF root element
@@ -44,14 +38,16 @@
 
     /// Initialize ROS variables
         ros::NodeHandle nh_;
-        ros::Publisher virtual_wall_publisher_;
-        ros::Subscriber wall_subscriber_;
+        ros::Publisher publisher_;
+        ros::Subscriber subscriber_;
         ros::Time prev_update_time_;
         event::ConnectionPtr updateConnection_;
         
     ///  Auxiliar variables
-        bool virtual_wall_status;
-        bool virtual_wall_sub;
+        bool is_vwall_detected_;
+        bool get_vwall_;
+        double update_period_;
+        std::mutex mtx;
       }; // GazeboVirtualWallDetector
     } // gazebo
     #endif // GAZEBO_VIRTUAL_WALL_DETECTOR_HH

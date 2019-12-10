@@ -2,24 +2,13 @@
 
 #include <gazebo/common/Plugin.hh>
 
+static const char create2_model_name_prefix[] = "irobot_create2.";
+static const size_t create2_model_name_prefix_length = sizeof(create2_model_name_prefix) - 1;
 
 namespace gazebo
 {
   // Register this plugin with the simulator
   GZ_REGISTER_MODEL_PLUGIN(GazeboVirtualWallDetector)
-
-  ////////////////////////////////////////////////////////////////////////////////
-  // Constructor
-  GazeboVirtualWallDetector::GazeboVirtualWallDetector():
-    nh_("virtual_wall_detector_plugin")
-{
-
-}
-  ////////////////////////////////////////////////////////////////////////////////
-  // Destructor
-  GazeboVirtualWallDetector::~GazeboVirtualWallDetector()
-  {
-  }
 
   void GazeboVirtualWallDetector::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf)
   {
@@ -30,12 +19,35 @@ namespace gazebo
         << "Load the Gazebo system plugin 'libgazebo_ros_api_plugin.so' in the gazebo_ros package)");
       return;
     }
+    if (!ros::isInitialized()) 
+    {
+      int argc = 0;
+      char** argv = NULL;
+      ros::init(argc, argv, "virtual_wall_detector");
+    }
     // Initialize the ros variables and gaebo variables
-    this->virtual_wall_publisher_ = nh_.advertise<std_msgs::Bool>("/filtered/virtual_wall", 1);
-    this->wall_subscriber_ = nh_.subscribe("/create1/virtual_wall", 1, &GazeboVirtualWallDetector::WallCallback, this);
-    this->updateConnection_ = event::Events::ConnectWorldUpdateBegin(
-      std::bind(&GazeboVirtualWallDetector::OnUpdate, this));    
-    this->prev_update_time_ = ros::Time::now();
+    const std::string & name = _parent->GetName();
+    std::istringstream iss(name.substr(create2_model_name_prefix_length));
+    size_t x;
+    iss >> x;
+//    ROS_WARN("The name %s",name.c_str());
+    if (iss && iss.eof()) 
+    {
+      std::ostringstream oss;
+      oss << "create" << x << "/virtual_wall/raw/";
+      std::string topic_name_ = oss.str();
+      ROS_WARN("The name %s",oss.str().c_str());
+      this->subscriber_ = this->nh_.subscribe(topic_name_, 1, &GazeboVirtualWallDetector::WallCallback, this);
+      oss.str("");
+      oss.clear();
+      oss << "create" << x << "/virtual_wall/";
+      topic_name_ = oss.str();
+      this->publisher_ = this->nh_.advertise<std_msgs::Bool>(topic_name_, 1);
+      this->updateConnection_ = event::Events::ConnectWorldUpdateBegin(
+        std::bind(&GazeboVirtualWallDetector::OnUpdate, this));    
+      this->prev_update_time_ = ros::Time::now();
+      this->update_period_ = 1.0/(_sdf->Get<double>("updateRate"));
+    }
   }
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -43,19 +55,21 @@ namespace gazebo
   void GazeboVirtualWallDetector::OnUpdate()
   //Every update check if one of the sensors is active, if it is, change the output to true, publishes every 1ms
   {
-    this->virtual_wall_status += this->virtual_wall_sub;
-    if ((ros::Time::now() - this->prev_update_time_) < ros::Duration(0.1)) 
+    this->is_vwall_detected_ += this->get_vwall_;
+    if ((ros::Time::now() - this->prev_update_time_) < ros::Duration(this->update_period_)) 
     {
       return;
     }
-    this->virtual_wall_publisher_.publish(this->virtual_wall_status);
-    this->virtual_wall_status = false;
+    this->publisher_.publish(this->is_vwall_detected_);
+    this->is_vwall_detected_ = false;
     this->prev_update_time_ = ros::Time::now();
   }
 
   void GazeboVirtualWallDetector::WallCallback(const std_msgs::Bool::ConstPtr& data)
   // Callback to get the data from the virtual wall sensors
   {
-    this->virtual_wall_sub = data->data;
+    mtx.lock();
+    this->get_vwall_ = data->data;
+    mtx.unlock();
   }
 }

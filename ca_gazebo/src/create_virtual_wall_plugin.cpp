@@ -78,7 +78,7 @@ void VirtualWallSensorPlugin::OnAddEntity()
       iss >> x;
       if (iss && iss.eof()) {
         std::ostringstream oss;
-        oss << "create" << x << "/virtual_wall";
+        oss << "create" << x << "/virtual_wall/raw/";
         ROS_DEBUG_NAMED("virtual_wall_plugin", "model name `%s` ok", name.c_str());
         this->pubs_.emplace_back(
           this->rosnode_->advertise<std_msgs::Bool>(
@@ -119,7 +119,7 @@ void VirtualWallSensorPlugin::OnUpdate()
     const ignition::math::Pose3d & robot_pose = model->WorldPose();
     sensor_offset = robot_pose.Rot().RotateVector(sensor_offset);
     ignition::math::Pose3d sensor_pose = robot_pose + sensor_pose;
-    ROS_INFO_NAMED("virtual_wall_plugin", "sensor_pose x=%f y=%f z=%f",
+    ROS_DEBUG_NAMED("virtual_wall_plugin", "sensor_pose x=%f y=%f z=%f",
         sensor_pose.Pos().X(),
         sensor_pose.Pos().Y(),
         sensor_pose.Pos().Z());
@@ -130,12 +130,12 @@ void VirtualWallSensorPlugin::OnUpdate()
     double phi = std::acos(error.Dot(laser_dir) / error.Length());
     double d = error.Length() * std::sin(phi);
     double lambda = (sensor_pose.Pos().X() - laser_pose.Pos().X()) / laser_dir.X();
-    ROS_INFO_NAMED("virtual_wall_plugin", "d=%f lambda=%f detected_range=%f error=%f",
+    ROS_DEBUG_NAMED("virtual_wall_plugin", "d=%f lambda=%f detected_range=%f error=%f",
         d,
         lambda,
         detected_range,
         error.Length());
-
+        
     std_msgs::Bool msg;
     bool in_range = detected_range > (error.Length() - 0.1) && error.Length() < this->sensor_->RangeMax();
     msg.data = d < 0.1 && lambda > 0 && in_range;
