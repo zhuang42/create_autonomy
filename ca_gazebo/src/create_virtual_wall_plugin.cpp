@@ -135,7 +135,7 @@ void VirtualWallSensorPlugin::OnUpdate()
         lambda,
         detected_range,
         error.Length());
-        
+
     std_msgs::Bool msg;
     bool in_range = detected_range > (error.Length() - 0.1) && error.Length() < this->sensor_->RangeMax();
     msg.data = d < 0.1 && lambda > 0 && in_range;

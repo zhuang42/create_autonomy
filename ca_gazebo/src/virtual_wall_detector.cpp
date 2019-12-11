@@ -12,6 +12,7 @@ namespace gazebo
 
   void GazeboVirtualWallDetector::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf)
   {
+    this->update_period_ = 1.0/(_sdf->Get<double>("updateRate"));
     // Make sure the ROS node for Gazebo has already been initialized
     if (!ros::isInitialized())
     {
@@ -30,23 +31,19 @@ namespace gazebo
     std::istringstream iss(name.substr(create2_model_name_prefix_length));
     size_t x;
     iss >> x;
-//    ROS_WARN("The name %s",name.c_str());
     if (iss && iss.eof()) 
     {
       std::ostringstream oss;
       oss << "create" << x << "/virtual_wall/raw/";
-      std::string topic_name_ = oss.str();
-      ROS_WARN("The name %s",oss.str().c_str());
-      this->subscriber_ = this->nh_.subscribe(topic_name_, 1, &GazeboVirtualWallDetector::WallCallback, this);
+      std::string topic_name = oss.str();
+      this->subscriber_ = this->nh_.subscribe(topic_name, 1, &GazeboVirtualWallDetector::WallCallback, this);
       oss.str("");
-      oss.clear();
       oss << "create" << x << "/virtual_wall/";
-      topic_name_ = oss.str();
-      this->publisher_ = this->nh_.advertise<std_msgs::Bool>(topic_name_, 1);
+      topic_name = oss.str();
+      this->publisher_ = this->nh_.advertise<std_msgs::Bool>(topic_name, 1);
       this->updateConnection_ = event::Events::ConnectWorldUpdateBegin(
         std::bind(&GazeboVirtualWallDetector::OnUpdate, this));    
       this->prev_update_time_ = ros::Time::now();
-      this->update_period_ = 1.0/(_sdf->Get<double>("updateRate"));
     }
   }
 
