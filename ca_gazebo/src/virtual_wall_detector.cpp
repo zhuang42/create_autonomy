@@ -1,7 +1,5 @@
 #include "ca_gazebo/virtual_wall_detector.h"
 
-#include <gazebo/common/Plugin.hh>
-
 static const char create2_model_name_prefix[] = "irobot_create2.";
 static const size_t create2_model_name_prefix_length = sizeof(create2_model_name_prefix) - 1;
 
@@ -57,7 +55,9 @@ namespace gazebo
     {
       return;
     }
-    this->publisher_.publish(this->is_vwall_detected_);
+    std_msgs::Bool msg;
+    msg.data = this->is_vwall_detected_;
+    this->publisher_.publish(msg);
     this->is_vwall_detected_ = false;
     this->prev_update_time_ = ros::Time::now();
   }
@@ -65,8 +65,7 @@ namespace gazebo
   void GazeboVirtualWallDetector::WallCallback(const std_msgs::Bool::ConstPtr& data)
   // Callback to get the data from the virtual wall sensors
   {
-    mtx.lock();
+    const std::lock_guard<std::mutex> lock(vwall_mutex);
     this->get_vwall_ = data->data;
-    mtx.unlock();
   }
 }
