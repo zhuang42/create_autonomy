@@ -7,6 +7,7 @@
   <xacro:property name="max_range_m" value="0.04"/>
 
   <xacro:property name="rate_hz" value="20.0"/>
+  <xacro:property name="min_cliff_value" value="0.035"/>
 
   <gazebo reference="${name_side_left}_cliff_sensor_link">
     <sensor type="ray" name="${name_side_left}_cliff_sensor">
@@ -30,8 +31,9 @@
         </range>
       </ray>
       <plugin name="gazebo_ros_${name_side_left}_cliff_sensor" filename="libcreate_cliff_plugin.so">
-        <topicName>${name_side_left}_cliff_sensor/scan</topicName>
+        <topicName>${name_side_left}_cliff_sensor/raw</topicName>
         <frameName>${name_side_left}_cliff_sensor_link</frameName>
+        <cliffValue>${min_cliff_value}</cliffValue>
       </plugin>
     </sensor>
   </gazebo>
@@ -58,8 +60,9 @@
         </range>
       </ray>
       <plugin name="gazebo_ros_${name_side_right}_cliff_sensor" filename="libcreate_cliff_plugin.so">
-        <topicName>${name_side_right}_cliff_sensor/scan</topicName>
+        <topicName>${name_side_right}_cliff_sensor/raw</topicName>
         <frameName>${name_side_right}_cliff_sensor_link</frameName>
+        <cliffValue>${min_cliff_value}</cliffValue>
       </plugin>
     </sensor>
   </gazebo>
@@ -86,8 +89,9 @@
         </range>
       </ray>
       <plugin name="gazebo_ros_${name_front_left}_cliff_sensor" filename="libcreate_cliff_plugin.so">
-        <topicName>${name_front_left}_cliff_sensor/scan</topicName>
+        <topicName>${name_front_left}_cliff_sensor/raw</topicName>
         <frameName>${name_front_left}_cliff_sensor</frameName>
+        <cliffValue>${min_cliff_value}</cliffValue>
       </plugin>
     </sensor>
   </gazebo>
@@ -114,8 +118,9 @@
         </range>
       </ray>
       <plugin name="gazebo_ros_${name_front_right}_cliff_sensor" filename="libcreate_cliff_plugin.so">
-        <topicName>${name_front_right}_cliff_sensor/scan</topicName>
+        <topicName>${name_front_right}_cliff_sensor/raw</topicName>
         <frameName>${name_front_right}_cliff_sensor</frameName>
+        <cliffValue>${min_cliff_value}</cliffValue>
       </plugin>
     </sensor>
   </gazebo>

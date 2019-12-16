@@ -8,7 +8,9 @@
 
 #include <ros/ros.h>
 #include <ros/advertise_options.h>
-#include <sensor_msgs/LaserScan.h>
+#include <std_msgs/Bool.h>
+
+#include <vector> 
 
 #include <sdf/Param.hh>
 #include <gazebo/physics/physics.hh>
@@ -52,7 +54,7 @@ namespace gazebo
     /// \brief pointer to ros node
     private: ros::NodeHandle* rosnode_;
     private: ros::Publisher pub_;
-    private: PubQueue<sensor_msgs::LaserScan>::Ptr pub_queue_;
+    private: PubQueue<std_msgs::Bool>::Ptr pub_queue_;
 
     /// \brief topic name
     private: std::string topic_name_;
@@ -75,6 +77,10 @@ namespace gazebo
     private: gazebo::transport::NodePtr gazebo_node_;
     private: gazebo::transport::SubscriberPtr laser_scan_sub_;
     private: void OnScan(ConstLaserScanStampedPtr &_msg);
+
+    /// Auxiliar variables to get the info from the Ray Sensor
+    private: std::vector<float> ranges;
+    private: float min_cliff_value;
 
     /// \brief prevents blocking
     private: PubMultiQueue pmq;

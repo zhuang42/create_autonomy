@@ -30,6 +30,11 @@ else()
 		${GAZEBO_INCLUDE_DIRS}
   )
 
+  add_library(create_cliff_plugin src/create_cliff_plugin.cpp)
+	add_dependencies(create_cliff_plugin ${catkin_EXPORTED_TARGETS})
+	target_link_libraries(create_cliff_plugin
+				${catkin_LIBRARIES} ${GAZEBO_LIBRARIES})
+
   add_library(create_bumper_plugin src/create_bumper_plugin.cpp)
 	add_dependencies(create_bumper_plugin ${catkin_EXPORTED_TARGETS})
 	target_link_libraries(create_bumper_plugin

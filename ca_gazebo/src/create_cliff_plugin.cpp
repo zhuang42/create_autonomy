@@ -76,6 +76,7 @@ void GazeboRosCliff::Load(sensors::SensorPtr _parent, sdf::ElementPtr _sdf)
     this->topic_name_ = this->sdf->Get<std::string>("topicName");
 
   this->laser_connect_count_ = 0;
+  this->min_cliff_value = _sdf->Get<double>("cliffValue");
 
     // Make sure the ROS node for Gazebo has already been initialized
   if (!ros::isInitialized())
@@ -117,13 +118,13 @@ void GazeboRosCliff::LoadThread()
   if (this->topic_name_ != "")
   {
     ros::AdvertiseOptions ao =
-      ros::AdvertiseOptions::create<sensor_msgs::LaserScan>(
+      ros::AdvertiseOptions::create<std_msgs::Bool>(
       this->topic_name_, 1,
       boost::bind(&GazeboRosCliff::LaserConnect, this),
       boost::bind(&GazeboRosCliff::LaserDisconnect, this),
       ros::VoidPtr(), NULL);
     this->pub_ = this->rosnode_->advertise(ao);
-    this->pub_queue_ = this->pmq.addPub<sensor_msgs::LaserScan>();
+    this->pub_queue_ = this->pmq.addPub<std_msgs::Bool>();
   }
 
   // Initialize the controller
@@ -153,31 +154,24 @@ void GazeboRosCliff::LaserDisconnect()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Convert new Gazebo message to ROS message and publish it
+// Convert new Gazebo message to ROS and publish if a cliff is detected or not
 void GazeboRosCliff::OnScan(ConstLaserScanStampedPtr &_msg)
 {
-  // We got a new message from the Gazebo sensor.  Stuff a
-  // corresponding ROS message and publish it.
-  sensor_msgs::LaserScan laser_msg;
-  laser_msg.header.stamp = ros::Time(_msg->time().sec(), _msg->time().nsec());
-  laser_msg.header.frame_id = this->frame_name_;
-  laser_msg.angle_min = _msg->scan().angle_min();
-  laser_msg.angle_max = _msg->scan().angle_max();
-  laser_msg.angle_increment = _msg->scan().angle_step();
-  laser_msg.time_increment = 0;  // instantaneous simulator scan
-  laser_msg.scan_time = 0;  // not sure whether this is correct
-  laser_msg.range_min = _msg->scan().range_min();
-  laser_msg.range_max = _msg->scan().range_max();
-  double aux;
-  aux =_msg->scan().ranges_size();
-  ROS_WARN("%f",aux);
+  this->ranges.resize(_msg->scan().ranges_size());
   std::copy(_msg->scan().ranges().begin(),
             _msg->scan().ranges().end(),
-            laser_msg.ranges.begin());
-  laser_msg.intensities.resize(_msg->scan().intensities_size());
-  std::copy(_msg->scan().intensities().begin(),
-            _msg->scan().intensities().end(),
-            laser_msg.intensities.begin());
-  this->pub_queue_->push(laser_msg, this->pub_);
+            this->ranges.begin());
+  bool cliff_status;
+  if(this->ranges[0] > this->min_cliff_value)
+  {
+    cliff_status = true;
+  }
+  else
+  {
+    cliff_status = false;
+  }
+  std_msgs::Bool msg_output;
+  msg_output.data = cliff_status;
+  this->pub_queue_->push(msg_output, this->pub_);
 }
 }
