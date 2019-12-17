@@ -9,7 +9,7 @@
   <xacro:property name="rate_hz" value="20.0"/>
   <xacro:property name="min_cliff_value_cm" value="3.5"/>
 
-  <xacro:macro name="gazebo_plugin" params="name">
+  <xacro:macro name="gazebo_cliff_sensor" params="name">
     <gazebo reference="${name}_cliff_sensor_link">
       <sensor type="ray" name="${name}_cliff_sensor">
         <always_on>true</always_on>
@@ -31,7 +31,7 @@
             <resolution>0.1</resolution>
           </range>
         </ray>
-        <plugin name="gazebo_ros_${name_side_left}_cliff_sensor" filename="libcreate_cliff_plugin.so">
+        <plugin name="${name}_cliff_sensor" filename="libcreate_cliff_plugin.so">
           <topicName>${name}_cliff_sensor/raw</topicName>
           <frameName>${name}_cliff_sensor_link</frameName>
           <cliffValue>${min_cliff_value_cm*cm_to_meters}</cliffValue>
@@ -40,10 +40,10 @@
     </gazebo>
   </xacro:macro>
 
-  <xacro:gazebo_plugin name="${name_side_left}"/>
-  <xacro:gazebo_plugin name="${name_side_right}"/>
-  <xacro:gazebo_plugin name="${name_front_left}"/>
-  <xacro:gazebo_plugin name="${name_front_right}"/>
+  <xacro:gazebo_cliff_sensor name="${name_side_left}"/>
+  <xacro:gazebo_cliff_sensor name="${name_side_right}"/>
+  <xacro:gazebo_cliff_sensor name="${name_front_left}"/>
+  <xacro:gazebo_cliff_sensor name="${name_front_right}"/>
 
 </xacro:macro>
 
