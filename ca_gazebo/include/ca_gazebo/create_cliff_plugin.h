@@ -1,29 +1,19 @@
 #ifndef GAZEBO_ROS_CLIFF_SENSOR_HH
 #define GAZEBO_ROS_CLIFF_SENSOR_HH
 
-#include <string>
-
-#include <boost/bind.hpp>
-#include <boost/thread.hpp>
-
 #include <ros/ros.h>
 #include <ros/advertise_options.h>
-#include <std_msgs/Bool.h>
+#include <tf/tf.h>
+#include <tf/transform_listener.h>
 
 #include <vector> 
 
-#include <sdf/Param.hh>
-#include <gazebo/physics/physics.hh>
-#include <gazebo/transport/TransportTypes.hh>
-#include <gazebo/msgs/MessageTypes.hh>
-#include <gazebo/common/Time.hh>
-#include <gazebo/common/Plugin.hh>
-#include <gazebo/common/Events.hh>
-#include <gazebo/sensors/SensorTypes.hh>
+#include <gazebo/transport/transport.hh>
 #include <gazebo/plugins/RayPlugin.hh>
-#include <gazebo_plugins/gazebo_ros_utils.h>
 
+#include <gazebo_plugins/gazebo_ros_utils.h>
 #include <gazebo_plugins/PubQueue.h>
+#include <std_msgs/Bool.h>
 
 namespace gazebo
 {
@@ -79,7 +69,6 @@ namespace gazebo
     private: void OnScan(ConstLaserScanStampedPtr &_msg);
 
     /// Auxiliar variables to get the info from the Ray Sensor
-    private: std::vector<float> ranges;
     private: float min_cliff_value;
 
     /// \brief prevents blocking

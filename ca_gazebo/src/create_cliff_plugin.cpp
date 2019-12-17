@@ -1,20 +1,3 @@
-#include <algorithm>
-#include <string>
-#include <assert.h>
-
-#include <gazebo/physics/World.hh>
-#include <gazebo/physics/HingeJoint.hh>
-#include <gazebo/sensors/Sensor.hh>
-#include <sdf/sdf.hh>
-#include <sdf/Param.hh>
-#include <gazebo/common/Exception.hh>
-#include <gazebo/sensors/RaySensor.hh>
-#include <gazebo/sensors/SensorTypes.hh>
-#include <gazebo/transport/transport.hh>
-
-#include <tf/tf.h>
-#include <tf/transform_listener.h>
-
 #include <ca_gazebo/create_cliff_plugin.h>
 
 namespace gazebo
@@ -157,21 +140,8 @@ void GazeboRosCliff::LaserDisconnect()
 // Convert new Gazebo message to ROS and publish if a cliff is detected or not
 void GazeboRosCliff::OnScan(ConstLaserScanStampedPtr &_msg)
 {
-  this->ranges.resize(_msg->scan().ranges_size());
-  std::copy(_msg->scan().ranges().begin(),
-            _msg->scan().ranges().end(),
-            this->ranges.begin());
-  bool cliff_status;
-  if(this->ranges[0] > this->min_cliff_value)
-  {
-    cliff_status = true;
-  }
-  else
-  {
-    cliff_status = false;
-  }
   std_msgs::Bool msg_output;
-  msg_output.data = cliff_status;
+  msg_output.data = _msg->scan().ranges(0) > this->min_cliff_value;
   this->pub_queue_->push(msg_output, this->pub_);
 }
 }
