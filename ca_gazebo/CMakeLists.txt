@@ -44,6 +44,10 @@ else()
   target_link_libraries(model_pose_publisher_plugin
         ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES})
 
+  add_library(cliff_msg_publisher src/cliff_msg_publisher.cpp)
+  target_link_libraries(cliff_msg_publisher
+        ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES})
+
   install(DIRECTORY launch worlds models
     DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
