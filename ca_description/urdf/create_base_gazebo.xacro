@@ -84,6 +84,15 @@
       <material>Gazebo/Grey</material>
     </gazebo>
 
+    <!-- Cliff Publisher detector -->
+    <gazebo>
+      <plugin name="cliff_msg_publisher" filename="libcliff_msg_publisher.so">
+        <updateRate>10</updateRate>
+        <robotNumber>${robot_number}</robotNumber>
+        <frameName>/base_link</frameName>
+      </plugin>
+    </gazebo>
+
   </xacro:macro>
 
 </robot>
