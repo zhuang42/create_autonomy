@@ -26,7 +26,7 @@ namespace gazebo
     if (!_sdf->HasElement("frameName"))
     {
         ROS_INFO("cliff plugin missing <frameName>, defaults to world");
-        this->frame_name_ = "world";
+        this->frame_name_ = "base_footprint";
     }
     else
         this->frame_name_ = _sdf->Get<std::string>("frameName");
@@ -51,6 +51,7 @@ namespace gazebo
     oss << "create" << this->robot_number_ << "/cliff_msg/";
     topic_name = oss.str();
     this->publisher_ = this->nh_.advertise<ca_msgs::Cliff>(topic_name, 1);
+    this->seq_counter_ = 0;
     this->updateConnection_ = event::Events::ConnectWorldUpdateBegin(
       std::bind(&GazeboCliffMsgPublisher::OnUpdate, this));    
     this->prev_update_time_ = ros::Time::now();
@@ -66,6 +67,7 @@ namespace gazebo
       return;
     }
     ca_msgs::Cliff msg;
+    this->seq_counter_++;
     msg.header.frame_id = this->frame_name_;
     msg.header.seq = this->seq_counter_;
     msg.header.stamp = ros::Time::now();
