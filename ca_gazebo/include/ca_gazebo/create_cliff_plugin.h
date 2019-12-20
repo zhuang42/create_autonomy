@@ -35,7 +35,6 @@ namespace gazebo
     private: void LaserDisconnect();
 
     // Pointer to the model
-    GazeboRosPtr gazebo_ros_;
     private: std::string world_name_;
     private: physics::WorldPtr world_;
     /// \brief The parent sensor

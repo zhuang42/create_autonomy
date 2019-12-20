@@ -34,12 +34,12 @@ void GazeboRosCliff::Load(sensors::SensorPtr _parent, sdf::ElementPtr _sdf)
 
   GAZEBO_SENSORS_USING_DYNAMIC_POINTER_CAST;
   this->parent_ray_sensor_ =
-    dynamic_pointer_cast<sensors::RaySensor>(_parent);
+      dynamic_pointer_cast<sensors::RaySensor>(_parent);
 
   if (!this->parent_ray_sensor_)
     gzthrow("GazeboRosCliff controller requires a Ray Sensor as its parent");
 
-  this->robot_namespace_ =  GetRobotNamespace(_parent, _sdf, "Laser");
+  this->robot_namespace_ = GetRobotNamespace(_parent, _sdf, "Laser");
 
   if (!this->sdf->HasElement("frameName"))
   {
@@ -48,7 +48,6 @@ void GazeboRosCliff::Load(sensors::SensorPtr _parent, sdf::ElementPtr _sdf)
   }
   else
     this->frame_name_ = this->sdf->Get<std::string>("frameName");
-
 
   if (!this->sdf->HasElement("topicName"))
   {
@@ -61,19 +60,18 @@ void GazeboRosCliff::Load(sensors::SensorPtr _parent, sdf::ElementPtr _sdf)
   this->laser_connect_count_ = 0;
   this->min_cliff_value = _sdf->Get<double>("cliffValue");
 
-    // Make sure the ROS node for Gazebo has already been initialized
+  // Make sure the ROS node for Gazebo has already been initialized
   if (!ros::isInitialized())
   {
     ROS_FATAL_STREAM_NAMED("laser", "A ROS node for Gazebo has not been initialized, unable to load plugin. "
-      << "Load the Gazebo system plugin 'libgazebo_ros_api_plugin.so' in the gazebo_ros package)");
+                                        << "Load the Gazebo system plugin 'libgazebo_ros_api_plugin.so' in the gazebo_ros package)");
     return;
   }
 
-  ROS_INFO_NAMED("laser", "Starting Laser Plugin (ns = %s)", this->robot_namespace_.c_str() );
+  ROS_INFO_NAMED("laser", "Starting Laser Plugin (ns = %s)", this->robot_namespace_.c_str());
   // ros callback queue for processing subscription
   this->deferred_load_thread_ = boost::thread(
-    boost::bind(&GazeboRosCliff::LoadThread, this));
-
+      boost::bind(&GazeboRosCliff::LoadThread, this));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -88,12 +86,13 @@ void GazeboRosCliff::LoadThread()
   this->rosnode_ = new ros::NodeHandle(this->robot_namespace_);
 
   this->tf_prefix_ = tf::getPrefixParam(*this->rosnode_);
-  if(this->tf_prefix_.empty()) {
-      this->tf_prefix_ = this->robot_namespace_;
-      boost::trim_right_if(this->tf_prefix_,boost::is_any_of("/"));
+  if (this->tf_prefix_.empty())
+  {
+    this->tf_prefix_ = this->robot_namespace_;
+    boost::trim_right_if(this->tf_prefix_, boost::is_any_of("/"));
   }
   ROS_INFO_NAMED("laser", "Laser Plugin (ns = %s)  <tf_prefix_>, set to \"%s\"",
-             this->robot_namespace_.c_str(), this->tf_prefix_.c_str());
+                 this->robot_namespace_.c_str(), this->tf_prefix_.c_str());
 
   // resolve tf prefix
   this->frame_name_ = tf::resolve(this->tf_prefix_, this->frame_name_);
@@ -101,11 +100,11 @@ void GazeboRosCliff::LoadThread()
   if (this->topic_name_ != "")
   {
     ros::AdvertiseOptions ao =
-      ros::AdvertiseOptions::create<std_msgs::Bool>(
-      this->topic_name_, 1,
-      boost::bind(&GazeboRosCliff::LaserConnect, this),
-      boost::bind(&GazeboRosCliff::LaserDisconnect, this),
-      ros::VoidPtr(), NULL);
+        ros::AdvertiseOptions::create<std_msgs::Bool>(
+            this->topic_name_, 1,
+            boost::bind(&GazeboRosCliff::LaserConnect, this),
+            boost::bind(&GazeboRosCliff::LaserDisconnect, this),
+            ros::VoidPtr(), NULL);
     this->pub_ = this->rosnode_->advertise(ao);
     this->pub_queue_ = this->pmq.addPub<std_msgs::Bool>();
   }
@@ -123,8 +122,8 @@ void GazeboRosCliff::LaserConnect()
   this->laser_connect_count_++;
   if (this->laser_connect_count_ == 1)
     this->laser_scan_sub_ =
-      this->gazebo_node_->Subscribe(this->parent_ray_sensor_->Topic(),
-                                    &GazeboRosCliff::OnScan, this);
+        this->gazebo_node_->Subscribe(this->parent_ray_sensor_->Topic(),
+                                      &GazeboRosCliff::OnScan, this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -144,4 +143,4 @@ void GazeboRosCliff::OnScan(ConstLaserScanStampedPtr &_msg)
   msg_output.data = _msg->scan().ranges(0) > this->min_cliff_value;
   this->pub_queue_->push(msg_output, this->pub_);
 }
-}
+} // namespace gazebo
