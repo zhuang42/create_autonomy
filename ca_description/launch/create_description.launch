@@ -5,12 +5,11 @@
   <arg name="robot_name" default="create"/>
   <arg name="visualize" default="$(optenv VISUALIZE false)"/>
   <arg name="tf_prefix" value="$(arg robot_name)_tf"/>
-  <arg name="robot_number" default="1"/>
 
   <arg name="freq" value="5.0"/>
 
   <!-- Robot description -->
-  <arg name="xacro_args" value="visualize:=$(arg visualize) robot_number:=$(arg robot_number)"/>
+  <arg name="xacro_args" value="visualize:=$(arg visualize) robot_name:=$(arg robot_name)"/>
   <param name="robot_description" command="$(find xacro)/xacro --inorder $(arg model) $(arg xacro_args)"/>
   <!-- Robot state publisher-->
   <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">

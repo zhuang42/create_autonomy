@@ -5,7 +5,6 @@
   <!-- Create 2 description -->
   <include file="$(find ca_description)/launch/create_description.launch">
     <arg name="robot_name" value="$(arg robot_name)"/>
-    <arg name="robot_number" value="$(arg i)"/>
   </include>
 
   <!-- Spawn URDF into Gazebo -->

@@ -88,7 +88,7 @@
     <gazebo>
       <plugin name="cliff_msg_publisher" filename="libcliff_msg_publisher.so">
         <updateRate>10</updateRate>
-        <robotNumber>${robot_number}</robotNumber>
+        <robotNumber>${robot_name}</robotNumber>
       </plugin>
     </gazebo>
 
