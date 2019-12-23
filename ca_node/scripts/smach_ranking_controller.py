@@ -9,12 +9,8 @@ from geometry_msgs.msg import Twist
 
 is_left_pressed = False
 is_right_pressed = False
-is_cliff_left = False
-is_cliff_right = False
-is_cliff_front_left = False
-is_cliff_front_right = False
-is_cliff = False
-
+cliff_msg = {'is_cliff_left': False, 'is_cliff_right': False, 'is_cliff_front_left': False,
+             'is_cliff_front_right': False, 'is_cliff': False}
 
 # define state Forward
 class Forward(smach.State):
@@ -24,15 +20,14 @@ class Forward(smach.State):
 
     def execute(self, userdata):
         rospy.loginfo('Going forward')
-        global is_left_pressed, is_right_pressed, is_cliff_left, is_cliff_right, is_cliff_front_left,\
-            is_cliff_front_right, is_cliff
+        global is_left_pressed, is_right_pressed, cliff_msg
         # Keep in this loop while:
         # LEFT | RIGHT | KEEP?
         #   0  |   0   |  1 --> Keep waiting
         #   0  |   1   |  0 --> right_pressed
         #   1  |   0   |  0 --> left_pressed
         #   1  |   1   |  0 --> both_pressed
-        while not (is_left_pressed or is_right_pressed or is_cliff):
+        while not (is_left_pressed or is_right_pressed or cliff_msg['is_cliff']):
             global vel_pub
             vel_msg = Twist()
             vel_msg.linear.x = 0.2
@@ -44,10 +39,10 @@ class Forward(smach.State):
             return 'left_pressed'
         elif is_right_pressed:
             return 'right_pressed'
-        elif is_cliff:
-            if is_cliff_left or is_cliff_front_left:
+        elif cliff_msg['is_cliff']:
+            if cliff_msg['is_cliff_left'] or cliff_msg['is_cliff_front_left']:
                 return 'cliff_left'
-            if is_cliff_right or is_cliff_front_right:
+            if cliff_msg['is_cliff_right'] or cliff_msg['is_cliff_front_right']:
                 return 'cliff_right'
         else:
             return 'aborted'
@@ -102,12 +97,13 @@ class RotateRight(smach.State):
 
 
 def cliff_cb(msg):
-    global is_cliff_left, is_cliff_right, is_cliff_front_left, is_cliff_front_right, is_cliff
-    is_cliff_left = msg.is_cliff_left
-    is_cliff_right = msg.is_cliff_right
-    is_cliff_front_left = msg.is_cliff_front_left
-    is_cliff_front_right = msg.is_cliff_front_right
-    is_cliff = is_cliff_left or is_cliff_right or is_cliff_front_left or is_cliff_front_right
+    global cliff_msg
+    cliff_msg['is_cliff_left'] = msg.is_cliff_left
+    cliff_msg['is_cliff_right'] = msg.is_cliff_right
+    cliff_msg['is_cliff_front_left'] = msg.is_cliff_front_left
+    cliff_msg['is_cliff_front_right'] = msg.is_cliff_front_right
+    cliff_msg['is_cliff'] = cliff_msg['is_cliff_left'] or cliff_msg['is_cliff_right'] or cliff_msg[
+        'is_cliff_front_left'] or cliff_msg['is_cliff_front_right']
 
 
 def bumper_cb(msg):
