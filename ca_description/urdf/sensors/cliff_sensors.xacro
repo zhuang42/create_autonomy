@@ -8,37 +8,34 @@
 
   <xacro:property name="parent_link" value="base_link"/>
 
-  <xacro:macro name="cliff_links_joints" params="name *origin">
+  <xacro:macro name="cliff" params="name *origin">
     <joint name="${name}_cliff_sensor_joint" type="fixed">
-      <xacro:insert_block name='origin' />
+      <xacro:insert_block name="origin" />
       <parent link="${parent_link}" />
       <child link="${name}_cliff_sensor_link" />
     </joint>
 
     <link name="${name}_cliff_sensor_link" />
 
+    <xacro:cliff_plugin visualize="${visualize}" name="${name}"/>
+
   </xacro:macro>
 
-  <xacro:cliff_links_joints name="side_left">
-    <origin xyz="0.07 0.14 0.01" rpy="0 ${pi/2} 0" />
-  </xacro:cliff_links_joints>
+  <xacro:cliff name="side_left">
+    <origin xyz="0.07 0.14 0.01" rpy="0 ${pi/2 - 0.09} 0" />
+  </xacro:cliff>
 
-  <xacro:cliff_links_joints name="side_right">
-    <origin xyz="0.07 -0.14 0.01" rpy="0 ${pi/2} 0" />
-  </xacro:cliff_links_joints>
+  <xacro:cliff name="side_right">
+    <origin xyz="0.07 -0.14 0.01" rpy="0 ${pi/2 - 0.09} 0" />
+  </xacro:cliff>
 
-  <xacro:cliff_links_joints name="front_left">
-    <origin xyz="0.15 0.04 0.01" rpy="0 ${pi/2} 0" />
-  </xacro:cliff_links_joints>
+  <xacro:cliff name="front_left">
+    <origin xyz="0.15 0.04 0.01" rpy="0 ${pi/2 - 0.09} 0" />
+  </xacro:cliff>
 
-  <xacro:cliff_links_joints name="front_right">
-    <origin xyz="0.15 -0.04 0.01" rpy="0 ${pi/2} 0" />
-  </xacro:cliff_links_joints>
-
-  <xacro:sim_create_cliff_sensors visualize="${visualize}" name="side_left"/>
-  <xacro:sim_create_cliff_sensors visualize="${visualize}" name="side_right"/>
-  <xacro:sim_create_cliff_sensors visualize="${visualize}" name="front_left"/>
-  <xacro:sim_create_cliff_sensors visualize="${visualize}" name="front_right"/>
+  <xacro:cliff name="front_right">
+    <origin xyz="0.15 -0.04 0.01" rpy="0 ${pi/2 - 0.09} 0" />
+  </xacro:cliff>
 
 </xacro:macro>
 
