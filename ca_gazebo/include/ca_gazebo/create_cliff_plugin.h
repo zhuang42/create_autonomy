@@ -41,7 +41,7 @@ namespace gazebo
     private: sensors::RaySensorPtr parent_ray_sensor_;
 
     /// \brief pointer to ros node
-    private: ros::NodeHandle* rosnode_;
+    private: std::shared_ptr<ros::NodeHandle> rosnode_;
     private: ros::Publisher pub_;
     private: PubQueue<std_msgs::Bool>::Ptr pub_queue_;
 
@@ -50,9 +50,6 @@ namespace gazebo
 
     /// \brief frame transform name, should match link name
     private: std::string frame_name_;
-
-    /// \brief tf prefix
-    private: std::string tf_prefix_;
 
     /// \brief for setting ROS name space
     private: std::string robot_namespace_;
