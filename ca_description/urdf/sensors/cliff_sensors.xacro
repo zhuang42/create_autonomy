@@ -8,52 +8,37 @@
 
   <xacro:property name="parent_link" value="base_link"/>
 
-  <xacro:property name="name_side_left" value="side_left"/>
-  <xacro:property name="name_side_right" value="side_right"/>
-  <xacro:property name="name_front_left" value="front_left"/>
-  <xacro:property name="name_front_right" value="front_right"/>
+  <xacro:macro name="cliff_links_joints" params="name *origin">
+    <joint name="${name}_cliff_sensor_joint" type="fixed">
+      <xacro:insert_block name='origin' />
+      <parent link="${parent_link}" />
+      <child link="${name}_cliff_sensor_link" />
+    </joint>
 
-  <joint name="${name_side_left}_cliff_sensor_joint" type="fixed">
+    <link name="${name}_cliff_sensor_link" />
+
+  </xacro:macro>
+
+  <xacro:cliff_links_joints name="side_left">
     <origin xyz="0.07 0.14 0.01" rpy="0 ${pi/2} 0" />
-    <parent link="${parent_link}" />
-    <child link="${name_side_left}_cliff_sensor_link" />
-  </joint>
+  </xacro:cliff_links_joints>
 
-  <joint name="${name_side_right}_cliff_sensor_joint" type="fixed">
+  <xacro:cliff_links_joints name="side_right">
     <origin xyz="0.07 -0.14 0.01" rpy="0 ${pi/2} 0" />
-    <parent link="${parent_link}" />
-    <child link="${name_side_right}_cliff_sensor_link" />
-  </joint>
+  </xacro:cliff_links_joints>
 
-  <joint name="${name_front_left}_front_cliff_sensor_joint" type="fixed">
+  <xacro:cliff_links_joints name="front_left">
     <origin xyz="0.15 0.04 0.01" rpy="0 ${pi/2} 0" />
-    <parent link="${parent_link}" />
-    <child link="${name_front_left}_cliff_sensor_link" />
-  </joint>
+  </xacro:cliff_links_joints>
 
-  <joint name="${name_front_right}_cliff_sensor_joint" type="fixed">
+  <xacro:cliff_links_joints name="front_right">
     <origin xyz="0.15 -0.04 0.01" rpy="0 ${pi/2} 0" />
-    <parent link="${parent_link}" />
-    <child link="${name_front_right}_cliff_sensor_link" />
-  </joint>
+  </xacro:cliff_links_joints>
 
-  <link name="${name_side_left}_cliff_sensor_link">
-    <xacro:dummy_inertia/>
-  </link>
-
-  <link name="${name_side_right}_cliff_sensor_link">
-    <xacro:dummy_inertia/>
-  </link>
-
-  <link name="${name_front_left}_cliff_sensor_link">
-    <xacro:dummy_inertia/>
-  </link>
-
-  <link name="${name_front_right}_cliff_sensor_link">
-    <xacro:dummy_inertia/>
-  </link>
-
-  <xacro:sim_create_cliff_sensors visualize="${visualize}"/>
+  <xacro:sim_create_cliff_sensors visualize="${visualize}" name="side_left"/>
+  <xacro:sim_create_cliff_sensors visualize="${visualize}" name="side_right"/>
+  <xacro:sim_create_cliff_sensors visualize="${visualize}" name="front_left"/>
+  <xacro:sim_create_cliff_sensors visualize="${visualize}" name="front_right"/>
 
 </xacro:macro>
 

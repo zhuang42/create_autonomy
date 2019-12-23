@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <robot xmlns:xacro="http://ros.org/wiki/xacro">
 
-<xacro:macro name="sim_create_cliff_sensors" params="visualize:=false">
+<xacro:macro name="sim_create_cliff_sensors" params="visualize:=false name">
 
   <xacro:property name="min_range_m" value="0.01"/>
   <xacro:property name="max_range_m" value="0.04"/>
@@ -9,7 +9,6 @@
   <xacro:property name="rate_hz" value="20.0"/>
   <xacro:property name="min_cliff_value_cm" value="3.5"/>
 
-  <xacro:macro name="gazebo_cliff_sensor" params="name">
     <gazebo reference="${name}_cliff_sensor_link">
       <sensor type="ray" name="${name}_cliff_sensor">
         <always_on>true</always_on>
@@ -38,12 +37,6 @@
         </plugin>
       </sensor>
     </gazebo>
-  </xacro:macro>
-
-  <xacro:gazebo_cliff_sensor name="${name_side_left}"/>
-  <xacro:gazebo_cliff_sensor name="${name_side_right}"/>
-  <xacro:gazebo_cliff_sensor name="${name_front_left}"/>
-  <xacro:gazebo_cliff_sensor name="${name_front_right}"/>
 
 </xacro:macro>
 
