@@ -4,40 +4,54 @@ import rospy
 import smach
 import smach_ros
 
-from ca_msgs.msg import Bumper
+from ca_msgs.msg import Bumper, Cliff
 from geometry_msgs.msg import Twist
 
 is_left_pressed = False
 is_right_pressed = False
+is_cliff_left = False
+is_cliff_right = False
+is_cliff_front_left = False
+is_cliff_front_right = False
+is_cliff = False
+
 
 # define state Forward
 class Forward(smach.State):
     def __init__(self):
-        smach.State.__init__(self, outcomes=['left_pressed', 'right_pressed', 'both_pressed'])
+        smach.State.__init__(self, outcomes=['left_pressed', 'right_pressed', 'both_pressed',
+                                             'cliff_right', 'cliff_left'])
 
     def execute(self, userdata):
         rospy.loginfo('Going forward')
-        global is_left_pressed, is_right_pressed
+        global is_left_pressed, is_right_pressed, is_cliff_left, is_cliff_right, is_cliff_front_left,\
+            is_cliff_front_right, is_cliff
         # Keep in this loop while:
         # LEFT | RIGHT | KEEP?
         #   0  |   0   |  1 --> Keep waiting
         #   0  |   1   |  0 --> right_pressed
         #   1  |   0   |  0 --> left_pressed
         #   1  |   1   |  0 --> both_pressed
-        while not (is_left_pressed or is_right_pressed):
+        while not (is_left_pressed or is_right_pressed or is_cliff):
             global vel_pub
             vel_msg = Twist()
             vel_msg.linear.x = 0.2
             vel_pub.publish(vel_msg)
 
         if is_left_pressed and is_left_pressed:
-          return 'both_pressed'
+            return 'both_pressed'
         elif is_left_pressed:
-          return 'left_pressed'
+            return 'left_pressed'
         elif is_right_pressed:
-          return 'right_pressed'
+            return 'right_pressed'
+        elif is_cliff:
+            if is_cliff_left or is_cliff_front_left:
+                return 'cliff_left'
+            if is_cliff_right or is_cliff_front_right:
+                return 'cliff_right'
         else:
-          return 'aborted'
+            return 'aborted'
+
 
 # define state Backward
 class Backward(smach.State):
@@ -54,6 +68,7 @@ class Backward(smach.State):
             vel_pub.publish(vel_msg)
         return 'done'
 
+
 # define state RotateLeft
 class RotateLeft(smach.State):
     def __init__(self):
@@ -68,6 +83,7 @@ class RotateLeft(smach.State):
             vel_msg.angular.z = 0.3
             vel_pub.publish(vel_msg)
         return 'done'
+
 
 # define state RotateRight
 class RotateRight(smach.State):
@@ -84,18 +100,31 @@ class RotateRight(smach.State):
             vel_pub.publish(vel_msg)
         return 'done'
 
+
+def cliff_cb(msg):
+    global is_cliff_left, is_cliff_right, is_cliff_front_left, is_cliff_front_right, is_cliff
+    is_cliff_left = msg.is_cliff_left
+    is_cliff_right = msg.is_cliff_right
+    is_cliff_front_left = msg.is_cliff_front_left
+    is_cliff_front_right = msg.is_cliff_front_right
+    is_cliff = is_cliff_left or is_cliff_right or is_cliff_front_left or is_cliff_front_right
+
+
 def bumper_cb(msg):
     global is_left_pressed, is_right_pressed
     is_left_pressed = msg.is_left_pressed
     is_right_pressed = msg.is_right_pressed
 
+
 def stop_cb():
     vel_pub.publish(Twist())
+
 
 # main
 def main():
     rospy.init_node('smach_ranking_controller')
-    _ = rospy.Subscriber("bumper", Bumper, bumper_cb)
+    bumper_sub = rospy.Subscriber("bumper", Bumper, bumper_cb)
+    cliff_sub = rospy.Subscriber("cliff_msg", Cliff, cliff_cb)
     global vel_pub
     vel_pub = rospy.Publisher("cmd_vel", Twist, queue_size=1)
     rospy.on_shutdown(stop_cb)
@@ -110,7 +139,9 @@ def main():
                                transitions={'left_pressed':'ROTATE_RIGHT_SEQ', 
                                             'right_pressed':'ROTATE_LEFT_SEQ',
                                             # 'both_pressed': 'BACKWARD'})
-                                            'both_pressed': 'ROTATE_LEFT_SEQ'})
+                                            'both_pressed': 'ROTATE_LEFT_SEQ',
+                                            'cliff_left' : 'ROTATE_RIGHT_SEQ',
+                                            'cliff_right' : 'ROTATE_LEFT_SEQ'})
         smach.StateMachine.add('BACKWARD', Backward(), 
                                transitions={'done':'FORWARD'})
 
