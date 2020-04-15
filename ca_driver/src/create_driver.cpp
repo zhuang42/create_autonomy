@@ -36,12 +36,26 @@ namespace create
 {
 
 CreateDriver::CreateDriver(ros::NodeHandle& nh, ros::NodeHandle& ph)
-  : nh_(nh),
-    priv_nh_(ph),
-    diagnostics_(),
-    model_(create::RobotModel::CREATE_2),
-    is_running_slowly_(false),
-    orientation_(0.0)
+  : nh_(nh)
+  , priv_nh_(ph)
+  , diagnostics_()
+  , model_(create::RobotModel::CREATE_2)
+  , is_running_slowly_(false)
+  , orientation_(0.0)
+  , bumper_msg_(new ca_msgs::Bumper())
+  , charging_state_msg_(new ca_msgs::ChargingState())
+  , cliff_msg_(new ca_msgs::Cliff())
+  , mode_msg_(new ca_msgs::Mode())
+  , is_overcurrent_msg_(new ca_msgs::Overcurrent())
+  , wheeldrop_msg_(new ca_msgs::Wheeldrop())
+  , angle_msg_(new geometry_msgs::PoseWithCovarianceStamped())
+  , odom_msg_(new nav_msgs::Odometry())
+  , joint_state_msg_(new sensor_msgs::JointState())
+  , is_wall_msg_(new std_msgs::Bool())
+  , empty_msg_(new std_msgs::Empty())
+  , float32_msg_(new std_msgs::Float32())
+  , int16_msg_(new std_msgs::Int16())
+  , uint16_msg_(new std_msgs::UInt16())
 {
   bool create_one;
   std::string robot_model_name;
@@ -94,28 +108,28 @@ CreateDriver::CreateDriver(ros::NodeHandle& nh, ros::NodeHandle& ph)
   ROS_INFO("[CREATE] Battery level %.2f %%", (robot_->getBatteryCharge() / robot_->getBatteryCapacity()) * 100.0);
 
   // Set frame_id's
-  mode_msg_.header.frame_id = tf::resolve(tf_prefix_, str_base_footprint_);
-  bumper_msg_.header.frame_id = tf::resolve(tf_prefix_, str_base_footprint_);
-  cliff_msg_.header.frame_id = tf::resolve(tf_prefix_, str_base_footprint_);
-  wheeldrop_msg_.header.frame_id = tf::resolve(tf_prefix_, str_base_footprint_);
-  charging_state_msg_.header.frame_id = tf::resolve(tf_prefix_, str_base_footprint_);
+  bumper_msg_->header.frame_id = tf::resolve(tf_prefix_, str_base_footprint_);
+  charging_state_msg_->header.frame_id = tf::resolve(tf_prefix_, str_base_footprint_);
+  cliff_msg_->header.frame_id = tf::resolve(tf_prefix_, str_base_footprint_);
+  mode_msg_->header.frame_id = tf::resolve(tf_prefix_, str_base_footprint_);
+  wheeldrop_msg_->header.frame_id = tf::resolve(tf_prefix_, str_base_footprint_);
+  angle_msg_->header.frame_id = tf::resolve(tf_prefix_, str_base_footprint_);
   tf_odom_.header.frame_id = tf::resolve(tf_prefix_, str_odom_);
   tf_odom_.child_frame_id = tf::resolve(tf_prefix_, str_base_footprint_);
-  odom_msg_.header.frame_id = tf::resolve(tf_prefix_, str_odom_);
-  odom_msg_.child_frame_id = tf::resolve(tf_prefix_, str_base_footprint_);
-  joint_state_msg_.name.resize(2);
-  joint_state_msg_.position.resize(2);
-  joint_state_msg_.velocity.resize(2);
-  joint_state_msg_.effort.resize(2);
-  joint_state_msg_.name[0] = "wheel_left_joint";
-  joint_state_msg_.name[1] = "wheel_right_joint";
-  angle_msg_.header.frame_id = tf::resolve(tf_prefix_, str_base_footprint_);
+  odom_msg_->header.frame_id = tf::resolve(tf_prefix_, str_odom_);
+  odom_msg_->child_frame_id = tf::resolve(tf_prefix_, str_base_footprint_);
+  joint_state_msg_->name.resize(2);
+  joint_state_msg_->position.resize(2);
+  joint_state_msg_->velocity.resize(2);
+  joint_state_msg_->effort.resize(2);
+  joint_state_msg_->name[0] = "wheel_left_joint";
+  joint_state_msg_->name[1] = "wheel_right_joint";
 
   // Populate intial covariances
   for (int i = 0; i < 36; i++)
   {
-    odom_msg_.pose.covariance[i] = COVARIANCE[i];
-    odom_msg_.twist.covariance[i] = COVARIANCE[i];
+    odom_msg_->pose.covariance[i] = COVARIANCE[i];
+    odom_msg_->twist.covariance[i] = COVARIANCE[i];
   }
 
   // Initialize NodeHandle for publishers and subscribers
@@ -461,40 +475,42 @@ void CreateDriver::updateDriverDiagnostics(diagnostic_updater::DiagnosticStatusW
 
 void CreateDriver::publishOdom()
 {
+  if(!odom_pub_.getNumSubscribers()) return;
+
   create::Pose pose = robot_->getPose();
   create::Vel vel = robot_->getVel();
 
   // Populate position info
   geometry_msgs::Quaternion quat = tf::createQuaternionMsgFromYaw(pose.yaw);
-  odom_msg_.header.stamp = ros::Time::now();
-  odom_msg_.pose.pose.position.x = pose.x;
-  odom_msg_.pose.pose.position.y = pose.y;
-  odom_msg_.pose.pose.orientation = quat;
+  odom_msg_->header.stamp = ros::Time::now();
+  odom_msg_->pose.pose.position.x = pose.x;
+  odom_msg_->pose.pose.position.y = pose.y;
+  odom_msg_->pose.pose.orientation = quat;
 
   // Populate velocity info
-  odom_msg_.twist.twist.linear.x = vel.x;
-  odom_msg_.twist.twist.linear.y = vel.y;
-  odom_msg_.twist.twist.angular.z = vel.yaw;
+  odom_msg_->twist.twist.linear.x = vel.x;
+  odom_msg_->twist.twist.linear.y = vel.y;
+  odom_msg_->twist.twist.angular.z = vel.yaw;
 
   // Update covariances
-  odom_msg_.pose.covariance[0] = static_cast<double>(pose.covariance[0]);
-  odom_msg_.pose.covariance[1] = pose.covariance[1];
-  odom_msg_.pose.covariance[5] = pose.covariance[2];
-  odom_msg_.pose.covariance[6] = pose.covariance[3];
-  odom_msg_.pose.covariance[7] = pose.covariance[4];
-  odom_msg_.pose.covariance[11] = pose.covariance[5];
-  odom_msg_.pose.covariance[30] = pose.covariance[6];
-  odom_msg_.pose.covariance[31] = pose.covariance[7];
-  odom_msg_.pose.covariance[35] = pose.covariance[8];
-  odom_msg_.twist.covariance[0] = vel.covariance[0];
-  odom_msg_.twist.covariance[1] = vel.covariance[1];
-  odom_msg_.twist.covariance[5] = vel.covariance[2];
-  odom_msg_.twist.covariance[6] = vel.covariance[3];
-  odom_msg_.twist.covariance[7] = vel.covariance[4];
-  odom_msg_.twist.covariance[11] = vel.covariance[5];
-  odom_msg_.twist.covariance[30] = vel.covariance[6];
-  odom_msg_.twist.covariance[31] = vel.covariance[7];
-  odom_msg_.twist.covariance[35] = vel.covariance[8];
+  odom_msg_->pose.covariance[0] = static_cast<double>(pose.covariance[0]);
+  odom_msg_->pose.covariance[1] = pose.covariance[1];
+  odom_msg_->pose.covariance[5] = pose.covariance[2];
+  odom_msg_->pose.covariance[6] = pose.covariance[3];
+  odom_msg_->pose.covariance[7] = pose.covariance[4];
+  odom_msg_->pose.covariance[11] = pose.covariance[5];
+  odom_msg_->pose.covariance[30] = pose.covariance[6];
+  odom_msg_->pose.covariance[31] = pose.covariance[7];
+  odom_msg_->pose.covariance[35] = pose.covariance[8];
+  odom_msg_->twist.covariance[0] = vel.covariance[0];
+  odom_msg_->twist.covariance[1] = vel.covariance[1];
+  odom_msg_->twist.covariance[5] = vel.covariance[2];
+  odom_msg_->twist.covariance[6] = vel.covariance[3];
+  odom_msg_->twist.covariance[7] = vel.covariance[4];
+  odom_msg_->twist.covariance[11] = vel.covariance[5];
+  odom_msg_->twist.covariance[30] = vel.covariance[6];
+  odom_msg_->twist.covariance[31] = vel.covariance[7];
+  odom_msg_->twist.covariance[35] = vel.covariance[8];
 
   if (publish_tf_)
   {
@@ -510,18 +526,21 @@ void CreateDriver::publishOdom()
 
 void CreateDriver::publishAngle()
 {
-  const float orientation_stddev = 5.0 * M_PI / 180.0;  // 5 degrees
   /*
    * According to Roomba Open Interface specs, the angle has to be
    * divided by 0.324056 to get the angle in degrees.
    * So, to get it in radians, the number has to be divided by 180 too.
    */
   orientation_ += (robot_->getAngle() * M_PI / 58.33008);
+
+  if(!angle_pub_.getNumSubscribers()) return;
+
+  const float orientation_stddev = 5.0 * M_PI / 180.0;  // 5 degrees
   const float yaw = CreateDriver::normalizeAngle(orientation_);
-  angle_msg_.pose.pose.orientation = tf::createQuaternionMsgFromYaw(yaw);
-  angle_msg_.header.seq += 1;
-  angle_msg_.header.stamp = ros::Time::now();
-  angle_msg_.pose.covariance[35] = orientation_stddev * orientation_stddev;
+  angle_msg_->pose.pose.orientation = tf::createQuaternionMsgFromYaw(yaw);
+  angle_msg_->header.seq += 1;
+  angle_msg_->header.stamp = ros::Time::now();
+  angle_msg_->pose.covariance[35] = orientation_stddev * orientation_stddev;
   angle_pub_.publish(angle_msg_);
 }
 
@@ -551,11 +570,11 @@ void CreateDriver::publishJointState()
   const float totalLeftAngDist  = robot_->getLeftWheelTotalDistance() / wheelRadius;
   const float totalRightAngDist = robot_->getRightWheelTotalDistance() / wheelRadius;
 
-  joint_state_msg_.header.stamp = ros::Time::now();
-  joint_state_msg_.position[0] = totalLeftAngDist;
-  joint_state_msg_.position[1] = totalRightAngDist;
-  joint_state_msg_.velocity[0] = robot_->getRequestedLeftWheelVel() / wheelRadius;
-  joint_state_msg_.velocity[1] = robot_->getRequestedRightWheelVel() / wheelRadius;
+  joint_state_msg_->header.stamp = ros::Time::now();
+  joint_state_msg_->position[0] = totalLeftAngDist;
+  joint_state_msg_->position[1] = totalRightAngDist;
+  joint_state_msg_->velocity[0] = robot_->getRequestedLeftWheelVel() / wheelRadius;
+  joint_state_msg_->velocity[1] = robot_->getRequestedRightWheelVel() / wheelRadius;
 
   if (publish_tf_)
   {
@@ -577,46 +596,23 @@ void CreateDriver::publishJointState()
 
 void CreateDriver::publishBatteryInfo()
 {
-  float32_msg_.data = robot_->getVoltage();
+  float32_msg_->data = robot_->getVoltage();
   voltage_pub_.publish(float32_msg_);
-  float32_msg_.data = robot_->getCurrent();
+  float32_msg_->data = robot_->getCurrent();
   current_pub_.publish(float32_msg_);
-  float32_msg_.data = robot_->getBatteryCharge();
+  float32_msg_->data = robot_->getBatteryCharge();
   charge_pub_.publish(float32_msg_);
-  float32_msg_.data = robot_->getBatteryCapacity();
+  float32_msg_->data = robot_->getBatteryCapacity();
   capacity_pub_.publish(float32_msg_);
-  int16_msg_.data = robot_->getTemperature();
+  int16_msg_->data = robot_->getTemperature();
   temperature_pub_.publish(int16_msg_);
-  float32_msg_.data = robot_->getBatteryCharge() / robot_->getBatteryCapacity();
+  float32_msg_->data = robot_->getBatteryCharge() / robot_->getBatteryCapacity();
   charge_ratio_pub_.publish(float32_msg_);
 
-  const create::ChargingState charging_state = robot_->getChargingState();
-  charging_state_msg_.header.stamp = ros::Time::now();
-  switch (charging_state)
-  {
-  case create::CHARGE_NONE:
-    charging_state_msg_.state = charging_state_msg_.CHARGE_NONE;
-    break;
-  case create::CHARGE_RECONDITION:
-    charging_state_msg_.state = charging_state_msg_.CHARGE_RECONDITION;
-    break;
+  if(!charging_state_pub_.getNumSubscribers()) return;
 
-  case create::CHARGE_FULL:
-    charging_state_msg_.state = charging_state_msg_.CHARGE_FULL;
-    break;
-
-  case create::CHARGE_TRICKLE:
-    charging_state_msg_.state = charging_state_msg_.CHARGE_TRICKLE;
-    break;
-
-  case create::CHARGE_WAITING:
-    charging_state_msg_.state = charging_state_msg_.CHARGE_WAITING;
-    break;
-
-  case create::CHARGE_FAULT:
-    charging_state_msg_.state = charging_state_msg_.CHARGE_FAULT;
-    break;
-  }
+  charging_state_msg_->header.stamp = ros::Time::now();
+  charging_state_msg_->state = robot_->getChargingState();
   charging_state_pub_.publish(charging_state_msg_);
 }
 
@@ -650,58 +646,45 @@ void CreateDriver::publishButtonPresses() const
 
 void CreateDriver::publishOmniChar()
 {
-  uint8_t ir_char = robot_->getIROmni();
-  uint16_msg_.data = ir_char;
+  if(!omni_char_pub_.getNumSubscribers()) return;
+
+  uint16_msg_->data = static_cast<uint16_t>(robot_->getIROmni());
   omni_char_pub_.publish(uint16_msg_);
   // TODO(@eborghi10): Publish info based on character, such as dock in sight
 }
 
 void CreateDriver::publishMode()
 {
-  const create::CreateMode mode = robot_->getMode();
-  mode_msg_.header.stamp = ros::Time::now();
-  switch (mode)
-  {
-  case create::MODE_OFF:
-    mode_msg_.mode = mode_msg_.MODE_OFF;
-    break;
-  case create::MODE_PASSIVE:
-    mode_msg_.mode = mode_msg_.MODE_PASSIVE;
-    break;
-  case create::MODE_SAFE:
-    mode_msg_.mode = mode_msg_.MODE_SAFE;
-    break;
-  case create::MODE_FULL:
-    mode_msg_.mode = mode_msg_.MODE_FULL;
-    break;
-  default:
-    ROS_ERROR("[CREATE] Unknown mode detected");
-    break;
-  }
+  if(!mode_pub_.getNumSubscribers()) return;
+
+  mode_msg_->header.stamp = ros::Time::now();
+  mode_msg_->mode = robot_->getMode();
   mode_pub_.publish(mode_msg_);
 }
 
 void CreateDriver::publishBumperInfo()
 {
-  bumper_msg_.header.stamp = ros::Time::now();
-  bumper_msg_.is_left_pressed = robot_->isLeftBumper();
-  bumper_msg_.is_right_pressed = robot_->isRightBumper();
+  if(!bumper_pub_.getNumSubscribers()) return;
+
+  bumper_msg_->header.stamp = ros::Time::now();
+  bumper_msg_->is_left_pressed = robot_->isLeftBumper();
+  bumper_msg_->is_right_pressed = robot_->isRightBumper();
 
   if (model_.getVersion() >= create::V_3)
   {
-    bumper_msg_.is_light_left = robot_->isLightBumperLeft();
-    bumper_msg_.is_light_front_left = robot_->isLightBumperFrontLeft();
-    bumper_msg_.is_light_center_left = robot_->isLightBumperCenterLeft();
-    bumper_msg_.is_light_right = robot_->isLightBumperRight();
-    bumper_msg_.is_light_front_right = robot_->isLightBumperFrontRight();
-    bumper_msg_.is_light_center_right = robot_->isLightBumperCenterRight();
+    bumper_msg_->is_light_left = robot_->isLightBumperLeft();
+    bumper_msg_->is_light_front_left = robot_->isLightBumperFrontLeft();
+    bumper_msg_->is_light_center_left = robot_->isLightBumperCenterLeft();
+    bumper_msg_->is_light_right = robot_->isLightBumperRight();
+    bumper_msg_->is_light_front_right = robot_->isLightBumperFrontRight();
+    bumper_msg_->is_light_center_right = robot_->isLightBumperCenterRight();
 
-    bumper_msg_.light_signal_left = robot_->getLightSignalLeft();
-    bumper_msg_.light_signal_front_left = robot_->getLightSignalFrontLeft();
-    bumper_msg_.light_signal_center_left = robot_->getLightSignalCenterLeft();
-    bumper_msg_.light_signal_right = robot_->getLightSignalRight();
-    bumper_msg_.light_signal_front_right = robot_->getLightSignalFrontRight();
-    bumper_msg_.light_signal_center_right = robot_->getLightSignalCenterRight();
+    bumper_msg_->light_signal_left = robot_->getLightSignalLeft();
+    bumper_msg_->light_signal_front_left = robot_->getLightSignalFrontLeft();
+    bumper_msg_->light_signal_center_left = robot_->getLightSignalCenterLeft();
+    bumper_msg_->light_signal_right = robot_->getLightSignalRight();
+    bumper_msg_->light_signal_front_right = robot_->getLightSignalFrontRight();
+    bumper_msg_->light_signal_center_right = robot_->getLightSignalCenterRight();
   }
 
   bumper_pub_.publish(bumper_msg_);
@@ -710,19 +693,22 @@ void CreateDriver::publishBumperInfo()
 
 void CreateDriver::publishCliffInfo()
 {
-  cliff_msg_.header.stamp = ros::Time::now();
+  if(!cliff_pub_.getNumSubscribers()) return;
+
+  cliff_msg_->header.stamp = ros::Time::now();
 
   if (model_.getVersion() >= create::V_3)
   {
-    cliff_msg_.is_cliff_left = robot_->isCliffLeft();
-    cliff_msg_.is_cliff_front_left = robot_->isCliffFrontLeft();
-    cliff_msg_.is_cliff_front_right = robot_->isCliffFrontRight();
-    cliff_msg_.is_cliff_right = robot_->isCliffRight();
+    cliff_msg_->is_cliff_left = robot_->isCliffLeft();
+    cliff_msg_->is_cliff_front_left = robot_->isCliffFrontLeft();
+    cliff_msg_->is_cliff_front_right = robot_->isCliffFrontRight();
+    cliff_msg_->is_cliff_right = robot_->isCliffRight();
 
-//    cliff_msg_.cliff_signal_left = robot_->getCliffSignalLeft();
-//    cliff_msg_.cliff_signal_front_left = robot_->getCliffSignalFrontLeft();
-//    cliff_msg_.cliff_signal_front_right = robot_->getCliffSignalFrontRight();
-//    cliff_msg_.cliff_signal_right = robot_->getCliffSignalRight();
+// TODO: ENABLE THIS IN ANOTHER TOPIC
+//    cliff_msg_->cliff_signal_left = robot_->getCliffSignalLeft();
+//    cliff_msg_->cliff_signal_front_left = robot_->getCliffSignalFrontLeft();
+//    cliff_msg_->cliff_signal_front_right = robot_->getCliffSignalFrontRight();
+//    cliff_msg_->cliff_signal_right = robot_->getCliffSignalRight();
   }
 
   cliff_pub_.publish(cliff_msg_);
@@ -730,26 +716,31 @@ void CreateDriver::publishCliffInfo()
 
 void CreateDriver::publishWheeldrop()
 {
-  wheeldrop_msg_.header.stamp = ros::Time::now();
-  wheeldrop_msg_.is_left_dropped = robot_->isLeftWheel();
-  wheeldrop_msg_.is_right_dropped = robot_->isRightWheel();
+  if(!wheeldrop_pub_.getNumSubscribers()) return;
+
+  wheeldrop_msg_->header.stamp = ros::Time::now();
+  wheeldrop_msg_->is_left_dropped = robot_->isLeftWheel();
+  wheeldrop_msg_->is_right_dropped = robot_->isRightWheel();
 
   wheeldrop_pub_.publish(wheeldrop_msg_);
 }
 
 void CreateDriver::publishIsWall()
 {
-  is_wall_msg_.data = robot_->isWall();
+  if(!wall_pub_.getNumSubscribers()) return;
 
+  is_wall_msg_->data = robot_->isWall();
   wall_pub_.publish(is_wall_msg_);
 }
 
 void CreateDriver::publishOvercurrent()
 {
-  is_overcurrent_msg_.is_left_wheel_overcurrent = robot_->isLeftWheelOvercurrent();
-  is_overcurrent_msg_.is_right_wheel_overcurrent = robot_->isRightWheelOvercurrent();
-  is_overcurrent_msg_.is_main_brush_overcurrent = robot_->isMainBrushOvercurrent();
-  is_overcurrent_msg_.is_side_brush_overcurrent = robot_->isSideBrushOvercurrent();
+  if(!overcurrent_pub_.getNumSubscribers()) return;
+
+  is_overcurrent_msg_->is_left_wheel_overcurrent = robot_->isLeftWheelOvercurrent();
+  is_overcurrent_msg_->is_right_wheel_overcurrent = robot_->isRightWheelOvercurrent();
+  is_overcurrent_msg_->is_main_brush_overcurrent = robot_->isMainBrushOvercurrent();
+  is_overcurrent_msg_->is_side_brush_overcurrent = robot_->isSideBrushOvercurrent();
 
   overcurrent_pub_.publish(is_overcurrent_msg_);
 }
