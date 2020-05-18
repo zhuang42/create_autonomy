@@ -8,6 +8,9 @@
   <arg name="rviz" default="$(optenv RVIZ false)"     doc="Flag to use RViz"/>
   <arg name="imu"  default="$(optenv IMU true)"       doc="Flag to use the IMU MPU9255"/>
 
+
+  <param name="tf_prefix" value="create$(arg robot_id)_tf" />
+
   <include file="$(find ca_node)/launch/create_2.launch"/>
 
   <!-- RViz -->

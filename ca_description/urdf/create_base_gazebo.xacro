@@ -19,9 +19,9 @@
         <odometryFrame>odom</odometryFrame>
         <robotBaseFrame>base_footprint</robotBaseFrame>
         <publishWheelTF>true</publishWheelTF>
-        <publishOdomTF>true</publishOdomTF>
+        <publishOdomTF>false</publishOdomTF>
         <publishWheelJointState>true</publishWheelJointState>
-        <odometrySource>world</odometrySource>
+        <odometrySource>encoder</odometrySource>
         <publishTf>true</publishTf>
       </plugin>
 
