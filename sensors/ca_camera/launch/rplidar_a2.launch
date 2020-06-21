@@ -3,8 +3,14 @@
   <arg name="ns"        value="create$(arg robot_id)" doc="Namespace of the robot. By default: create1"/>
   <arg name="tf_prefix" value="$(arg ns)_tf"          doc="Tf prefix"/>
 
-  <include file="$(find rplidar_ros)/launch/rplidar.launch">
-    <param name="/rplidarNode/serial_port" value="/dev/ttyUSB1"/>
-    <param name="/rplidarNode/frame_id"    value="$(arg tf_prefix)/laser_link"/>
-  </include>
+  <arg name="config"    value="$(find ca_camera)/config/rplidar.yaml"
+                        doc="RPLiDAR A2 configuration file."/>
+
+  <node name="rplidar_a2" pkg="rplidar_ros" type="rplidarNode" output="screen">
+    <rosparam command="load" file="$(arg config)" />
+
+    <param name="frame_id" type="string" value="$(arg tf_prefix)/laser_link"/>
+
+    <remap from="scan" to="rplidar/scan"/>
+  </node>
 </launch>
