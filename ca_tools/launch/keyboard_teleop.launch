@@ -10,5 +10,7 @@
 
   <node pkg="ca_tools" type="turtlebot_teleop_key" name="turtlebot_teleop_keyboard"
         ns="$(arg ns)" output="screen"
-        if="$(eval str(arg('robot_id')).isdigit() and (arg('robot_id') > 0) and arg('type')=='turtlebot' )"/>
+        if="$(eval str(arg('robot_id')).isdigit() and (arg('robot_id') > 0) and arg('type')=='turtlebot' )">
+      <remap from="cmd_vel" to="mobile_base/commands/velocity"/>
+  </node>
 </launch>

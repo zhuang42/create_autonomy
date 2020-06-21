@@ -4,7 +4,18 @@
 
     <gazebo>
       <!-- Diff-drive controller -->
-      <plugin name="differential_drive_controller" filename="libgazebo_ros_diff_drive.so">
+      <plugin name="kobuki_controller" filename="libgazebo_ros_kobuki.so">
+	      <publish_tf>1</publish_tf>
+	      <left_wheel_joint_name>wheel_left_joint</left_wheel_joint_name>
+	      <right_wheel_joint_name>wheel_right_joint</right_wheel_joint_name>
+	      <wheel_separation>${wheel_separation}</wheel_separation>
+	      <wheel_diameter>${wheel_radius * 2}</wheel_diameter>
+	      <torque>1.0</torque>
+	      <velocity_command_timeout>0.6</velocity_command_timeout>
+        <rosDebugLevel>Debug</rosDebugLevel>
+	    </plugin>
+
+      <!-- <plugin name="differential_drive_controller" filename="libgazebo_ros_diff_drive.so">
         <alwaysOn>true</alwaysOn>
         <rosDebugLevel>na</rosDebugLevel>
         <updateRate>30</updateRate>
@@ -23,7 +34,7 @@
         <publishWheelJointState>true</publishWheelJointState>
         <odometrySource>world</odometrySource>
         <publishTf>true</publishTf>
-      </plugin>
+      </plugin> -->
 
       <!-- Ground truth -->
       <plugin name="p3d_base_controller" filename="libgazebo_ros_p3d.so">
