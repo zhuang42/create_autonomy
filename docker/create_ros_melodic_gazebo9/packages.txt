@@ -5,6 +5,7 @@ libgstreamer-plugins-good1.0-dev
 libqt4-dev
 libudev-dev
 python-catkin-lint
+python3-vcstool
 
 ros-*-amcl
 ros-*-camera-calibration
